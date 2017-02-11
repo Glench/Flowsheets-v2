@@ -1,5 +1,7 @@
 // @flow
 const spawn = require('child_process').spawn;
+const ui = require('./renderer.js');
+const $ = require('jquery');
 
 var python_interpreter = spawn('python', [__dirname+'/interpreter.py']);
 
@@ -37,7 +39,7 @@ python_interpreter.stderr.on('readable', () => {
 
     while (character) {
         character = character.toString();
-        
+
         if (character === '\n') {
 
             // run callbacks
@@ -90,10 +92,8 @@ class Block {
 function python_declare(block: Block):void {
     // set up an expression or function to run. equivalent to a declaration.
     success_queue.push(function(data: string) {
-        console.log('executed yay!')
     });
     fail_queue.push(function(data: string) {
-        console.log('error in exec!', data)
         block.error = data;
     });
     python_interpreter.stdin.write(`__EXEC:${block.code.replace('\n', '__NEWLINE__')}\n`)
@@ -108,6 +108,8 @@ function python_evaluate(block: Block):void {
         } catch(e) {
             throw `Error on evaluating. Data coming out of 'Block ${block.name}' is bad: ${data}`;
         }
+
+        $('.output').text(block.output);
     });
     fail_queue.push(function(data: string) {
         console.log('error in eval!', data)
@@ -135,6 +137,7 @@ function update_other_blocks_because_this_one_changed(updatedBlock: Block):void 
 
 
 // testing
+/*
 var block1 = new Block();
 block1.name = 'a';
 block1.code = 'a = 1'
@@ -164,6 +167,7 @@ block5.depends_on.push(block3);
 blocks.push(block5)
 
 update_other_blocks_because_this_one_changed(block1)
+*/
 
 // python_declare(block1)
 // python_declare(block2)
@@ -177,6 +181,7 @@ update_other_blocks_because_this_one_changed(block1)
 
 
 module.exports = {
+    Block: Block,
     python_interpreter: python_interpreter,
     blocks: blocks,
     update_other_blocks_because_this_one_changed: update_other_blocks_because_this_one_changed,

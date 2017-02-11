@@ -1,4 +1,6 @@
 const spawn = require('child_process').spawn;
+const ui = require('./renderer.js');
+const $ = require('jquery');
 
 var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
 
@@ -76,11 +78,8 @@ class Block {
 
 function python_declare(block) {
     // set up an expression or function to run. equivalent to a declaration.
-    success_queue.push(function (data) {
-        console.log('executed yay!');
-    });
+    success_queue.push(function (data) {});
     fail_queue.push(function (data) {
-        console.log('error in exec!', data);
         block.error = data;
     });
     python_interpreter.stdin.write(`__EXEC:${block.code.replace('\n', '__NEWLINE__')}\n`);
@@ -95,6 +94,8 @@ function python_evaluate(block) {
         } catch (e) {
             throw `Error on evaluating. Data coming out of 'Block ${block.name}' is bad: ${data}`;
         }
+
+        $('.output').text(block.output);
     });
     fail_queue.push(function (data) {
         console.log('error in eval!', data);
@@ -118,35 +119,37 @@ function update_other_blocks_because_this_one_changed(updatedBlock) {
 }
 
 // testing
+/*
 var block1 = new Block();
 block1.name = 'a';
-block1.code = 'a = 1';
-blocks.push(block1);
+block1.code = 'a = 1'
+blocks.push(block1)
 
 var block2 = new Block();
-block2.name = 'b';
-block2.code = 'b = a+1';
+block2.name = 'b'
+block2.code = 'b = a+1'
 block2.depends_on.push(block1);
-blocks.push(block2);
+blocks.push(block2)
 
 var block3 = new Block();
-block3.name = 'c';
-block3.code = 'c = a+3';
+block3.name = 'c'
+block3.code = 'c = a+3'
 block3.depends_on.push(block1);
-blocks.push(block3);
+blocks.push(block3)
 
 var block4 = new Block();
-block4.name = 'd';
-block4.code = 'd = "d"';
-blocks.push(block4);
+block4.name = 'd'
+block4.code = 'd = "d"'
+blocks.push(block4)
 
 var block5 = new Block();
-block5.name = 'e';
-block5.code = 'e = c*"e"';
+block5.name = 'e'
+block5.code = 'e = c*"e"'
 block5.depends_on.push(block3);
-blocks.push(block5);
+blocks.push(block5)
 
-update_other_blocks_because_this_one_changed(block1);
+update_other_blocks_because_this_one_changed(block1)
+*/
 
 // python_declare(block1)
 // python_declare(block2)
@@ -156,6 +159,7 @@ update_other_blocks_because_this_one_changed(block1);
 
 
 module.exports = {
+    Block: Block,
     python_interpreter: python_interpreter,
     blocks: blocks,
     update_other_blocks_because_this_one_changed: update_other_blocks_because_this_one_changed
