@@ -1,40 +1,48 @@
 import sys
-import time
 import json
+from datetime import datetime
 
-__saved_lines = []
+with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
 
-while True:
-    # payload = '__EXEC:a = 1'
-    # payload = '__EVAL:json.dumps(a)'
-    payload = sys.stdin.readline().strip() # assume one line is one command, with newlines displayed as __NEWLINE__
-    if payload:
+    while True:
 
-        cleaned_payload = payload.replace('__NEWLINE__', '\n')
+        # I would use sys.stdin.readline() here, but it seems like there's a bug where
+        # if input is being sent in too fast then readlines takes incoming pieces instead of
+        # separating by new line.
 
-        try:
-            if cleaned_payload.startswith('__EXEC:'):
-                cleaned_payload = cleaned_payload[7:]
-                exec(cleaned_payload)
-                sys.stdout.write('Payload executed successfully: '+cleaned_payload)
-                sys.stdout.flush()
+        tentative_payload = ''
+        next_character = sys.stdin.read(1)
+        # Data format is one line per command, with newlines within a command displayed as __NEWLINE__
+        while next_character != '\n':
+            tentative_payload += next_character # @Speed? Is appending characters to strings too slow?
+            next_character = sys.stdin.read(1) # Note: I believe the program execution is paused while waiting for the next character.
 
-            elif cleaned_payload.startswith('__EVAL:'):
-                cleaned_payload = cleaned_payload[7:]
-                sys.stdout.write(eval(cleaned_payload))
-                sys.stdout.flush()
+        payload = tentative_payload
+        # payload = '__EXEC:a = 1'
+        # payload = '__EVAL:json.dumps(a)'
 
-            else:
-                raise Exception('Payload did not start with execution instruction __EXEC or __EVAL')
+        if payload:
 
-            # should really just write this data to a file
-            __saved_lines.append(cleaned_payload)
+            cleaned_payload = payload.replace('__NEWLINE__', '\n')
 
-            # sys.stdout.write('Successfully ran payload "{}"\n'.format(payload))
-            # sys.stdout.flush()
+            try:
+                if cleaned_payload.startswith('__EXEC:'):
+                    cleaned_payload = cleaned_payload[7:]
+                    exec(cleaned_payload)
+                    sys.stdout.write('Payload executed successfully: {}\n'.format(cleaned_payload))
+                    sys.stdout.flush()
 
-        except Exception as e:
-            sys.stderr.write('Error while running payload "{}": {}'.format(payload, e))
-            sys.stderr.flush()
+                elif cleaned_payload.startswith('__EVAL:'):
+                    cleaned_payload = cleaned_payload[7:]
+                    sys.stdout.write(eval(cleaned_payload)+'\n')
+                    sys.stdout.flush()
 
-    time.sleep(.01)
+                else:
+                    raise Exception('Payload did not start with execution instruction __EXEC or __EVAL')
+
+                log_file.write(cleaned_payload+'\n')
+                log_file.flush()
+
+            except Exception as e:
+                sys.stderr.write('Error while running payload "{}": {}\n'.format(payload, e))
+                sys.stderr.flush()

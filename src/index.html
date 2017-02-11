@@ -27,22 +27,37 @@
       recompile_css();
       setInterval(recompile_css, 1000)
     </script>
+
+
+
   </head>
   <body>
-    <h1>Butts!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
+    <table id="main">
+
+      <tr>
+        <td><input name="code" placeholder="Code"/></td>
+      </tr>
+      <tr>
+        <th><input name="name" placeholder="Value name"/></th>
+      </tr>
+      <tr>
+        <td class="output"></td>
+      </tr>
+
+    </table>
+
+
+    <script>
+      const ui = require('./renderer.js')
+      const interpreter = require('./interpreter.js')
+      const $ = require('jquery')
+
+      // make sure to kill the python process or else it will keep running after electron exits
+      process.on('exit', () => {
+          interpreter.python_interpreter.kill()
+      })
+
+    </script>
   </body>
 
-  <script>
-    require('./renderer.js')
-    const interpreter = require('./interpreter.js')
-
-    // make sure to kill the python process or else it will keep running after electron exits
-    process.on('exit', () => {
-        interpreter.python_interpreter.kill()
-    })
-  </script>
 </html>
