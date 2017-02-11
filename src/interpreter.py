@@ -29,7 +29,7 @@ while True:
 
             # should really just write this data to a file
             __saved_lines.append(cleaned_payload)
-            
+
             # sys.stdout.write('Successfully ran payload "{}"\n'.format(payload))
             # sys.stdout.flush()
 
@@ -37,4 +37,4 @@ while True:
             sys.stderr.write('Error while running payload "{}": {}'.format(payload, e))
             sys.stderr.flush()
 
-    time.sleep(.1)
+    time.sleep(.01)

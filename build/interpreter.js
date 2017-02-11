@@ -79,7 +79,7 @@ function update_other_blocks_because_this_one_changed(updatedBlock) {
     }
 }
 
-// testing code
+// testing
 var block1 = new Block();
 block1.name = 'a';
 block1.code = 'a = 1';
@@ -102,8 +102,11 @@ block4.name = 'd';
 block4.code = 'd = "d"';
 blocks.push(block4);
 
-python_declare(block4);
-python_evaluate(block4);
+var block5 = new Block();
+block5.name = 'e';
+block5.code = 'e = c*"e"';
+block5.depends_on.push(block3);
+blocks.push(block5);
 
 update_other_blocks_because_this_one_changed(block1);
 
