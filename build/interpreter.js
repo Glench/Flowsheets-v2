@@ -1,6 +1,5 @@
 const spawn = require('child_process').spawn;
 const ui = require('./renderer.js');
-const $ = require('jquery');
 
 var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
 
@@ -95,7 +94,7 @@ function python_evaluate(block) {
             throw `Error on evaluating. Data coming out of 'Block ${block.name}' is bad: ${data}`;
         }
 
-        $('.output').text(block.output);
+        ui.render_output(block);
     });
     fail_queue.push(function (data) {
         console.log('error in eval!', data);
@@ -158,9 +157,7 @@ update_other_blocks_because_this_one_changed(block1)
 // python_evaluate(block2)
 
 
-module.exports = {
-    Block: Block,
-    python_interpreter: python_interpreter,
-    blocks: blocks,
-    update_other_blocks_because_this_one_changed: update_other_blocks_because_this_one_changed
-};
+module.exports.Block = Block;
+module.exports.python_interpreter = python_interpreter;
+module.exports.blocks = blocks;
+module.exports.update_other_blocks_because_this_one_changed = update_other_blocks_because_this_one_changed;
