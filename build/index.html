@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Flowsheets v2</title>
+
+    <!-- for more production-ready, use static css below -->
+    <!-- <link type="text/css" href="style.css" /> -->
+
+    <style></style>
+    <script>
+      const less = require('less');
+      const fs = require('fs');
+
+      function recompile_css() {
+        // @Cleanup @Speed reading the file and recompiling every second is probably hella slow,
+        // but hot-loading style changes is hella tight.
+        less.render(fs.readFileSync(__dirname+'/../src/style.less').toString(), function(e, cssObj) {
+          if (e) throw e;
+          var currentCss = document.querySelector('style').innerText
+          if (currentCss !== cssObj.css) {
+            document.querySelector('style').innerText = cssObj.css;
+          }
+        })
+      }
+
+      recompile_css();
+      setInterval(recompile_css, 1000)
+    </script>
+  </head>
+  <body>
+    <h1>Butts!</h1>
+    <!-- All of the Node.js APIs are available in this renderer process. -->
+    We are using Node.js <script>document.write(process.versions.node)</script>,
+    Chromium <script>document.write(process.versions.chrome)</script>,
+    and Electron <script>document.write(process.versions.electron)</script>.
+  </body>
+
+  <script>
+    require('./renderer.js')
+    const interpreter = require('./interpreter.js')
+
+    // make sure to kill the python process or else it will keep running after electron exits
+    process.on('exit', () => {
+        interpreter.python_interpreter.kill()
+    })
+  </script>
+</html>

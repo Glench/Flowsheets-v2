@@ -1,0 +1,14 @@
+{
+  "name": "flowsheetsv2",
+  "main": "build/main.js",
+  "scripts": {
+    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "run": "flow && lessc src/style.less build/style.css && babel src/ --out-dir build/ && cp src/index.html build/ && cp src/interpreter.py build/ && electron ."
+  },
+  "devDependencies": {
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "electron": "^1.4.15",
+    "flow-bin": "^0.38.0",
+    "less": "^2.7.2"
+  }
+}
