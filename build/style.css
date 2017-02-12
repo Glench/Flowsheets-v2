@@ -8,5 +8,15 @@ h1 {
   color: #f00;
 }
 body {
-  color: #808080;
+  font: 14px/1 "Courier", monospace;
+  color: black;
+}
+#main {
+  border-collapse: collapse;
+}
+#main td {
+  min-width: 86px;
+  border: 1px solid #ddd;
+  border-spacing: 0;
+  padding: 8px 0;
 }

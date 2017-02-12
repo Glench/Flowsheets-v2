@@ -12,6 +12,7 @@
       const less = require('less');
       const fs = require('fs');
 
+      // hotload less files for (relatively) instantaneous style changes
       function recompile_css() {
         // @Cleanup @Speed reading the file and recompiling every second is probably hella slow,
         // but hot-loading style changes is hella tight.
@@ -29,21 +30,12 @@
     </script>
 
 
-
   </head>
   <body>
     <table id="main">
+      <tbody>
 
-      <tr>
-        <td><input name="code" placeholder="Code"/></td>
-      </tr>
-      <tr>
-        <th><input name="name" placeholder="Value name"/></th>
-      </tr>
-      <tr>
-        <td class="output"></td>
-      </tr>
-
+      </tbody>
     </table>
 
 
@@ -52,24 +44,15 @@
       const interpreter = require('./interpreter.js')
       const $ = require('jquery')
 
+      ui.initialize_grid();
 
       var block = new interpreter.Block();
       block.name = 'a'
+      block.code = 'a = 1+1'
+      block.output = 2;
       interpreter.blocks.push(block)
 
-      $('[name="code"').on('change', function(evt) {
-          console.log('code change!')
-          var block = interpreter.blocks[0];
-          block.code = evt.target.value;
-          interpreter.update_other_blocks_because_this_one_changed(block)
-      })
-
-      $('[name="name"]').on('change', function(evt) {
-          console.log('name change!')
-          var block = interpreter.blocks[0];
-          block.name = evt.target.value;
-      })
-
+      ui.create_block(block, 0,0);
 
 
       // make sure to kill the python process or else it will keep running after electron exits

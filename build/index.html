@@ -33,17 +33,22 @@
   </head>
   <body>
     <table id="main">
+      <tbody>
 
-      <tr>
+<!--       <tr>
+        <td><input name="code" placeholder="Code"/></td>
         <td><input name="code" placeholder="Code"/></td>
       </tr>
       <tr>
         <th><input name="name" placeholder="Value name"/></th>
+        <th><input name="name" placeholder="Value name"/></th>
       </tr>
       <tr>
         <td class="output"></td>
+        <td class="output"></td>
       </tr>
-
+ -->
+      </tbody>
     </table>
 
 
@@ -52,12 +57,17 @@
       const interpreter = require('./interpreter.js')
       const $ = require('jquery')
 
+      ui.initialize_grid();
 
       var block = new interpreter.Block();
       block.name = 'a'
+      block.code = 'a = 1+1'
+      block.output = 2;
       interpreter.blocks.push(block)
 
-      $('[name="code"').on('change', function(evt) {
+      ui.create_block(block, 0,0);
+
+      $('[name="code"]').on('change', function(evt) {
           console.log('code change!')
           var block = interpreter.blocks[0];
           block.code = evt.target.value;

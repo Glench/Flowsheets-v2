@@ -16,8 +16,8 @@ python_interpreter.stdout.on('readable', () => {
 
             // run callbacks
             var success_func: Function = success_queue.shift();
-            success_func(stdout_accumulation)
             fail_queue.shift();
+            success_func(stdout_accumulation)
 
             stdout_accumulation = '';
             character = python_interpreter.stdout.read(1);
@@ -43,8 +43,8 @@ python_interpreter.stderr.on('readable', () => {
 
             // run callbacks
             var fail_func: Function = fail_queue.shift();
-            fail_func(stderr_accumulation)
             success_queue.shift();
+            fail_func(stderr_accumulation)
 
             stderr_accumulation = '';
             character = python_interpreter.stderr.read(1);
@@ -77,7 +77,7 @@ class Block {
     depends_on: Block[];
     code: string;
     output: JSONType;
-    error: string;
+    error: ?string;
 
     constructor() {
         this.depends_on = [];
@@ -101,9 +101,10 @@ function python_declare(block: Block):void {
 function python_evaluate(block: Block):void {
     // get the value of an expression
     success_queue.push(function(data: string) {
-        console.log('evaled yay!', data)
+        console.log(`eval ran successfully for "Block ${block.name}"`)
         try {
-            block.output = eval(data);
+            // for some reason, eval-ing JSON object literals is a syntax error??
+            eval(`block.output = ${data}`);
         } catch(e) {
             throw `Error on evaluating. Data coming out of 'Block ${block.name}' is bad: ${data}`;
         }
@@ -111,7 +112,7 @@ function python_evaluate(block: Block):void {
         ui.render_output(block);
     });
     fail_queue.push(function(data: string) {
-        console.log('error in eval!', data)
+        throw `error in evaling Block ${block.name}! ${data}`;
     });
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
 }
