@@ -1,7 +1,38 @@
 const spawn = require('child_process').spawn;
+const filbert = require('filbert');
+const _ = require('underscore');
+
 const ui = require('./renderer.js');
 
 var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
+module.exports.python_interpreter = python_interpreter;
+
+function get_user_identifiers(python_expression) {
+    var obj = filbert.parse(python_expression);
+
+    var identifiers = {}; // would use a unique Set object if there was one
+
+    function _walk(current_obj, accumlated_identifiers) {
+        _.each(current_obj, (value, key) => {
+            if (!value || _.isString(value)) {
+                return;
+            }
+
+            if (value.type === 'Identifier' && !_.has(value, 'userCode')) {
+                console.log('key:', key, 'value:', value, 'has usercode', _.has(value, 'userCode'));
+                accumlated_identifiers[value.name] = true;
+            }
+            _walk(value, accumlated_identifiers);
+        });
+    }
+    _walk(obj, identifiers);
+    // only return user codes
+    // @Cleanup: will need to make sure identifiers aren't variables written in a function
+    return _.keys(identifiers).filter(key => {
+        return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key);
+    });
+}
+module.exports.get_user_identifiers = get_user_identifiers;
 
 var stdout_accumulation = '';
 python_interpreter.stdout.setEncoding('utf8');
@@ -60,6 +91,29 @@ python_interpreter.stderr.on('readable', () => {
 
 // The state!
 var blocks = [];
+module.exports.blocks = blocks;
+
+function generate_unique_name() {
+    var existing_names = blocks.map(block => block.name);
+    var alpha_index = 'a';
+    var current_test_name = alpha_index;
+    while (existing_names.indexOf(current_test_name) >= 0) {
+        alpha_index = String.fromCharCode(alpha_index.charCodeAt(0) + 1);
+        console.log(alpha_index);
+        current_test_name = alpha_index;
+    }
+    return current_test_name;
+}
+function generate_unique_name_from_name(test_name) {
+    var existing_names = blocks.map(block => block.name);
+    var number_index = 0;
+    var current_test_name = test_name;
+    while (existing_names.indexOf(current_test_name) >= 0) {
+        number_index += 1;
+        current_test_name = test_name + '_' + number_index;
+    }
+    return current_test_name;
+}
 
 // Basically, queue up commands to run on the python processes's stdin,
 // and queue up what to do if a command succeeds or fails as well. If
@@ -78,10 +132,15 @@ class Block {
         return `Block ${this.name}`;
     }
 }
+module.exports.Block = Block;
 
 function create_block(name, code) {
     var block = new Block();
-    block.name = name;
+    if (name) {
+        block.name = generate_unique_name_from_name(name);
+    } else {
+        block.name = generate_unique_name();
+    }
     block.code = code;
 
     blocks.push(block);
@@ -133,17 +192,33 @@ function python_evaluate(block) {
 
 function change_name(block, name) {
     var old_name = block.name;
-    block.name = name;
+    block.name = generate_unique_name_from_name(name);
 
     var python_code = `${block.name} = ${old_name}; del ${old_name}`;
-    console.log(python_code);
 
     var callback = () => console.log(`Block ${old_name} name changed to ${block.name}`);
     success_queue.push(callback);
     fail_queue.push(callback);
     python_interpreter.stdin.write(`__EXEC:${python_code}\n`);
+
+    return block.name;
 }
 module.exports.change_name = change_name;
+
+function change_code(block, code) {
+    block.code = code;
+
+    // update dependencies
+    var names = get_user_identifiers(block.code);
+
+    block.depends_on = blocks.filter(function (test_block) {
+        return _.contains(names, test_block.name);
+    });
+    console.log(block.depends_on);
+
+    update_other_blocks_because_this_one_changed(block);
+}
+module.exports.change_code = change_code;
 
 function update_other_blocks_because_this_one_changed(updatedBlock) {
     // if a block's value changes, go find all the other blocks that depend on that block and update them
@@ -159,6 +234,7 @@ function update_other_blocks_because_this_one_changed(updatedBlock) {
         });
     }
 }
+module.exports.update_other_blocks_because_this_one_changed = update_other_blocks_because_this_one_changed;
 
 // testing
 /*
@@ -198,9 +274,3 @@ update_other_blocks_because_this_one_changed(block1)
 
 // python_evaluate(block1)
 // python_evaluate(block2)
-
-
-module.exports.Block = Block;
-module.exports.python_interpreter = python_interpreter;
-module.exports.blocks = blocks;
-module.exports.update_other_blocks_because_this_one_changed = update_other_blocks_because_this_one_changed;

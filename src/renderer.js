@@ -21,13 +21,13 @@ class UIBlock {
 };
 module.exports.UIBlock = UIBlock;
 
-module.exports.initialize_grid = function() {
+function initialize_grid() {
     for (var row=0; row < rows; ++row) {
         var $tr = $('<tr>')
         for (var column = 0; column < columns; ++column) {
             var onClick = function(row,column) {
                 return function(evt) {
-                    var block = interpreter.create_block('b', '10+20');
+                    var block = interpreter.create_block(null, '10+20');
                     create_block(block, row, column);
                 }
             }
@@ -37,8 +37,9 @@ module.exports.initialize_grid = function() {
         $('#main').append($tr)
     }
 }
+module.exports.initialize_grid = initialize_grid;
 
-function create_block (block: Block, row: number, column: number) {
+function create_block(block: Block, row: number, column: number) {
     var ui_block = new UIBlock();
     ui_block.row = row;
     ui_block.column = column;
@@ -49,7 +50,8 @@ function create_block (block: Block, row: number, column: number) {
     var $name = $('<input>').attr('id', 'name-'+block.name).attr('value', block.name).on('change', function(evt) {
           console.log('name change!')
           var old_name = block.name;
-          interpreter.change_name(block, evt.target.value);
+          var new_name = interpreter.change_name(block, evt.target.value);
+          $(evt.target).val(new_name)
 
           $('#code-'+old_name).attr('id', 'code-'+block.name)
           $('#name-'+old_name).attr('id', 'name-'+block.name)
@@ -63,8 +65,7 @@ function create_block (block: Block, row: number, column: number) {
     // update code
     var $code = $('<input>').attr('id', 'code-'+block.name).attr('value', block.code).on('change', function(evt) {
           console.log('code change!')
-          block.code = evt.target.value;
-          interpreter.update_other_blocks_because_this_one_changed(block)
+          interpreter.change_code(block, evt.target.value);
     }).on('click', function(evt) {
         evt.stopPropagation();
     })
