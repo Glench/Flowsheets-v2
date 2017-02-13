@@ -28,7 +28,7 @@ function initialize_grid() {
             var onClick = function(row,column) {
                 return function(evt) {
                     var block = interpreter.create_block(null, '10+20');
-                    create_block(block, row, column);
+                    render_block(block, row, column);
                 }
             }
             var $td = $('<td>').on('click', onClick(row, column));
@@ -39,7 +39,7 @@ function initialize_grid() {
 }
 module.exports.initialize_grid = initialize_grid;
 
-function create_block(block: Block, row: number, column: number) {
+function render_block(block: Block, row: number, column: number) {
     var ui_block = new UIBlock();
     ui_block.row = row;
     ui_block.column = column;
@@ -48,7 +48,6 @@ function create_block(block: Block, row: number, column: number) {
 
     // update name
     var $name = $('<input>').attr('id', 'name-'+block.name).attr('value', block.name).on('change', function(evt) {
-          console.log('name change!')
           var old_name = block.name;
           var new_name = interpreter.change_name(block, evt.target.value);
           $(evt.target).val(new_name)
@@ -64,7 +63,6 @@ function create_block(block: Block, row: number, column: number) {
 
     // update code
     var $code = $('<input>').attr('id', 'code-'+block.name).attr('value', block.code).on('change', function(evt) {
-          console.log('code change!')
           interpreter.change_code(block, evt.target.value);
     }).on('click', function(evt) {
         evt.stopPropagation();
@@ -77,14 +75,23 @@ function create_block(block: Block, row: number, column: number) {
     })
     $('#main tr').eq(row+2).find('td').eq(column).html($output)
 };
-module.exports.create_block = create_block;
+module.exports.render_block = render_block;
 
 function render_output(block: Block) {
     var $output = $('#output-'+block.name)
     if (block.error) {
         $output.attr('value', block.error)    
+        $output.css('background-color', '#f00')
     } else {
         $output.attr('value', block.output);
+        fade_background_color($output, 1, 'rgba(255,255,0, ')
     }
 };
+function fade_background_color($element, alpha, color) {
+    if (alpha < 0) { return }
+    alpha -= .04
+    var new_color = color.replace(' ', ` ${alpha})`)
+    $element.css('background-color', new_color)
+    setTimeout(fade_background_color, 1000/60, $element, alpha, color);
+}
 module.exports.render_output = render_output;

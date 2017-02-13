@@ -19,7 +19,6 @@ function get_user_identifiers(python_expression) {
             }
 
             if (value.type === 'Identifier' && !_.has(value, 'userCode')) {
-                console.log('key:', key, 'value:', value, 'has usercode', _.has(value, 'userCode'));
                 accumlated_identifiers[value.name] = true;
             }
             _walk(value, accumlated_identifiers);
@@ -214,7 +213,6 @@ function change_code(block, code) {
     block.depends_on = blocks.filter(function (test_block) {
         return _.contains(names, test_block.name);
     });
-    console.log(block.depends_on);
 
     update_other_blocks_because_this_one_changed(block);
 }
