@@ -46,18 +46,14 @@
 
       ui.initialize_grid();
 
-      var block = new interpreter.Block();
-      block.name = 'a'
-      block.code = 'a = 1+1'
-      block.output = 2;
-      interpreter.blocks.push(block)
+      var block = interpreter.create_block('a', '1+1');
 
       ui.create_block(block, 0,0);
 
 
       // make sure to kill the python process or else it will keep running after electron exits
       process.on('exit', () => {
-          interpreter.python_interpreter.kill()
+          interpreter.python_interpreter.kill('SIGKILL')
       })
 
     </script>

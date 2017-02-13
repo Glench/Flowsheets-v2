@@ -12,6 +12,7 @@
       const less = require('less');
       const fs = require('fs');
 
+      // hotload less files for (relatively) instantaneous style changes
       function recompile_css() {
         // @Cleanup @Speed reading the file and recompiling every second is probably hella slow,
         // but hot-loading style changes is hella tight.
@@ -29,25 +30,11 @@
     </script>
 
 
-
   </head>
   <body>
     <table id="main">
       <tbody>
 
-<!--       <tr>
-        <td><input name="code" placeholder="Code"/></td>
-        <td><input name="code" placeholder="Code"/></td>
-      </tr>
-      <tr>
-        <th><input name="name" placeholder="Value name"/></th>
-        <th><input name="name" placeholder="Value name"/></th>
-      </tr>
-      <tr>
-        <td class="output"></td>
-        <td class="output"></td>
-      </tr>
- -->
       </tbody>
     </table>
 
@@ -59,32 +46,14 @@
 
       ui.initialize_grid();
 
-      var block = new interpreter.Block();
-      block.name = 'a'
-      block.code = 'a = 1+1'
-      block.output = 2;
-      interpreter.blocks.push(block)
+      var block = interpreter.create_block('a', '1+1');
 
       ui.create_block(block, 0,0);
-
-      $('[name="code"]').on('change', function(evt) {
-          console.log('code change!')
-          var block = interpreter.blocks[0];
-          block.code = evt.target.value;
-          interpreter.update_other_blocks_because_this_one_changed(block)
-      })
-
-      $('[name="name"]').on('change', function(evt) {
-          console.log('name change!')
-          var block = interpreter.blocks[0];
-          block.name = evt.target.value;
-      })
-
 
 
       // make sure to kill the python process or else it will keep running after electron exits
       process.on('exit', () => {
-          interpreter.python_interpreter.kill()
+          interpreter.python_interpreter.kill('SIGKILL')
       })
 
     </script>

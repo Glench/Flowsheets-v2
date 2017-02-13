@@ -15,9 +15,11 @@ python_interpreter.stdout.on('readable', () => {
         if (character === '\n') {
 
             // run callbacks
-            var success_func: Function = success_queue.shift();
-            fail_queue.shift();
-            success_func(stdout_accumulation)
+            if (fail_queue.length && success_queue.length) {
+                var success_func: Function = success_queue.shift();
+                fail_queue.shift();
+                success_func(stdout_accumulation)
+            }
 
             stdout_accumulation = '';
             character = python_interpreter.stdout.read(1);
@@ -42,9 +44,11 @@ python_interpreter.stderr.on('readable', () => {
         if (character === '\n') {
 
             // run callbacks
-            var fail_func: Function = fail_queue.shift();
-            success_queue.shift();
-            fail_func(stderr_accumulation)
+            if (fail_queue.length && success_queue.length) {
+                var fail_func: Function = fail_queue.shift();
+                success_queue.shift();
+                fail_func(stderr_accumulation)
+            }
 
             stderr_accumulation = '';
             character = python_interpreter.stderr.read(1);
@@ -88,14 +92,36 @@ class Block {
     }
 }
 
+function create_block(name: string, code: string) {
+    var block = new Block();
+    block.name = name;
+    block.code = code;
+
+    blocks.push(block);
+
+    update_other_blocks_because_this_one_changed(block);
+
+    return block;
+}
+module.exports.create_block = create_block;
+
 function python_declare(block: Block):void {
     // set up an expression or function to run. equivalent to a declaration.
     success_queue.push(function(data: string) {
+        block.error = ''
+        ui.render_output(block);
     });
     fail_queue.push(function(data: string) {
         block.error = data;
+
+        // remove next command, which is always an EVAL for the same variable
+        success_queue.shift()
+        fail_queue.shift()
+
+        ui.render_output(block);
     });
-    python_interpreter.stdin.write(`__EXEC:${block.code.replace('\n', '__NEWLINE__')}\n`)
+    var python_code = `${block.name} = ${block.code}`
+    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`)
 }
 
 function python_evaluate(block: Block):void {
@@ -105,6 +131,7 @@ function python_evaluate(block: Block):void {
         try {
             // for some reason, eval-ing JSON object literals is a syntax error??
             eval(`block.output = ${data}`);
+            block.error = '';
         } catch(e) {
             throw `Error on evaluating. Data coming out of 'Block ${block.name}' is bad: ${data}`;
         }
@@ -116,6 +143,20 @@ function python_evaluate(block: Block):void {
     });
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
 }
+
+function change_name(block: Block, name: string) {
+    var old_name = block.name;
+    block.name = name;
+
+    var python_code = `${block.name} = ${old_name}; del ${old_name}`;
+    console.log(python_code)
+
+    var callback = () => console.log(`Block ${old_name} name changed to ${block.name}`)
+    success_queue.push(callback);
+    fail_queue.push(callback)
+    python_interpreter.stdin.write(`__EXEC:${python_code}\n`)
+}
+module.exports.change_name = change_name;
 
 function update_other_blocks_because_this_one_changed(updatedBlock: Block):void {
     // if a block's value changes, go find all the other blocks that depend on that block and update them
