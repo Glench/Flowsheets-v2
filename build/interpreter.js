@@ -208,10 +208,24 @@ function change_code(block, code) {
     block.code = code;
 
     // update dependencies
-    var names = get_user_identifiers(block.code);
+    try {
+        var names = get_user_identifiers(block.code);
+    } catch (e) {
+        // syntax error
+        block.error = e;
+        ui.render_output(block);
+        return;
+    }
+
+    // @Cleanup: detect cyclical dependencies more formally, not just self reference
+    if (_.contains(names, block.name)) {
+        block.error = "Can't refer to self with name \"" + block.name + "\"";
+        ui.render_output(block);
+        return;
+    }
 
     block.depends_on = blocks.filter(function (test_block) {
-        return _.contains(names, test_block.name);
+        return _.contains(names, test_block.name) && test_block.name !== block.name;
     });
 
     update_other_blocks_because_this_one_changed(block);
