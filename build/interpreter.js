@@ -11,48 +11,26 @@ function get_user_identifiers(python_expression) {
     var advance_token = filbert.tokenize(python_expression);
     var token = advance_token();
     var names = {};
-    debugger;
     while (token.type.type !== 'eof') {
         if (token.type.type === 'name') {
             names[token.value] = true;
         }
         token = advance_token();
     }
+    // remove all references to built-ins
     return _.keys(names).filter(key => {
         return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key);
     });
-
-    //  var obj = filbert.parse(python_expression);
-
-    //  var identifiers = {}; // would use a unique Set object if there was one
-
-    //  function _walk(current_obj, accumlated_identifiers) {
-    //      _.each(current_obj, (value, key) => {
-    //          if (!value || _.isString(value)) { return; }
-
-    //          if (value.type === 'Identifier' && !_.has(value, 'userCode')) {
-    //              accumlated_identifiers[value.name] = true;
-    //          }
-    //          _walk(value, accumlated_identifiers)
-    //      })
-    //  }
-    //  _walk(obj, identifiers);
-    //  // only return user codes
-    //  // @Cleanup: will need to make sure identifiers aren't variables written in a function
-    //  return _.keys(identifiers).filter(key => {
-    //      return !_.has(filbert.pythonRuntime, key) &&
-    //             !_.has(filbert.pythonRuntime.functions, key) &&
-    //             !_.has(filbert.pythonRuntime.ops, key);
-    // });
 }
 module.exports.get_user_identifiers = get_user_identifiers;
 
-var stdout_accumulation = '';
+var stdout_accumulation = [];
 python_interpreter.stdout.setEncoding('utf8');
 python_interpreter.stdout.on('readable', () => {
 
     var character = python_interpreter.stdout.read(1);
 
+    // pipe.read(1) returns null when nothing to read
     while (character) {
         character = character.toString();
         if (character === '\n') {
@@ -61,20 +39,20 @@ python_interpreter.stdout.on('readable', () => {
             if (fail_queue.length && success_queue.length) {
                 var success_func = success_queue.shift();
                 fail_queue.shift();
-                success_func(stdout_accumulation);
+                success_func(stdout_accumulation.join(''));
             }
 
-            stdout_accumulation = '';
+            stdout_accumulation = [];
             character = python_interpreter.stdout.read(1);
             continue;
         }
 
-        stdout_accumulation += character; // @Speed? This is probably hella slow. Is .join() faster?
+        stdout_accumulation.push(character); // @Speed? This is probably hella slow. Is .join() faster?
         character = python_interpreter.stdout.read(1);
     }
 });
 
-var stderr_accumulation = '';
+var stderr_accumulation = [];
 python_interpreter.stderr.setEncoding('utf8');
 python_interpreter.stderr.on('readable', () => {
 
@@ -89,15 +67,15 @@ python_interpreter.stderr.on('readable', () => {
             if (fail_queue.length && success_queue.length) {
                 var fail_func = fail_queue.shift();
                 success_queue.shift();
-                fail_func(stderr_accumulation);
+                fail_func(stderr_accumulation.join(''));
             }
 
-            stderr_accumulation = '';
+            stderr_accumulation = [];
             character = python_interpreter.stderr.read(1);
             continue;
         }
 
-        stderr_accumulation += character; // @Speed? This is probably hella slow. Is .join() faster?
+        stderr_accumulation.push(character); // @Speed? This is probably hella slow. Is .join() faster?
         character = python_interpreter.stderr.read(1);
     }
 });
@@ -224,7 +202,6 @@ function change_code(block, code) {
     // update dependencies
     try {
         var names = get_user_identifiers(block.code);
-        console.log(names);
     } catch (e) {
         // syntax error
         block.error = e;
@@ -248,7 +225,7 @@ function change_code(block, code) {
 module.exports.change_code = change_code;
 
 function update_other_blocks_because_this_one_changed(updatedBlock) {
-    // if a block's value changes, go find all the other blocks that depend on that block and update them
+    // if a block's value changes, update it and go update all the other blocks that depend on that block
     var updated_blocks = [updatedBlock];
     while (updated_blocks.length) {
         var block = updated_blocks.shift(); // pop off front of array
