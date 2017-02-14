@@ -8,28 +8,42 @@ var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
 module.exports.python_interpreter = python_interpreter;
 
 function get_user_identifiers(python_expression) {
-    var obj = filbert.parse(python_expression);
-
-    var identifiers = {}; // would use a unique Set object if there was one
-
-    function _walk(current_obj, accumlated_identifiers) {
-        _.each(current_obj, (value, key) => {
-            if (!value || _.isString(value)) {
-                return;
-            }
-
-            if (value.type === 'Identifier' && !_.has(value, 'userCode')) {
-                accumlated_identifiers[value.name] = true;
-            }
-            _walk(value, accumlated_identifiers);
-        });
+    var advance_token = filbert.tokenize(python_expression);
+    var token = advance_token();
+    var names = {};
+    debugger;
+    while (token.type.type !== 'eof') {
+        if (token.type.type === 'name') {
+            names[token.value] = true;
+        }
+        token = advance_token();
     }
-    _walk(obj, identifiers);
-    // only return user codes
-    // @Cleanup: will need to make sure identifiers aren't variables written in a function
-    return _.keys(identifiers).filter(key => {
+    return _.keys(names).filter(key => {
         return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key);
     });
+
+    //  var obj = filbert.parse(python_expression);
+
+    //  var identifiers = {}; // would use a unique Set object if there was one
+
+    //  function _walk(current_obj, accumlated_identifiers) {
+    //      _.each(current_obj, (value, key) => {
+    //          if (!value || _.isString(value)) { return; }
+
+    //          if (value.type === 'Identifier' && !_.has(value, 'userCode')) {
+    //              accumlated_identifiers[value.name] = true;
+    //          }
+    //          _walk(value, accumlated_identifiers)
+    //      })
+    //  }
+    //  _walk(obj, identifiers);
+    //  // only return user codes
+    //  // @Cleanup: will need to make sure identifiers aren't variables written in a function
+    //  return _.keys(identifiers).filter(key => {
+    //      return !_.has(filbert.pythonRuntime, key) &&
+    //             !_.has(filbert.pythonRuntime.functions, key) &&
+    //             !_.has(filbert.pythonRuntime.ops, key);
+    // });
 }
 module.exports.get_user_identifiers = get_user_identifiers;
 
@@ -210,6 +224,7 @@ function change_code(block, code) {
     // update dependencies
     try {
         var names = get_user_identifiers(block.code);
+        console.log(names);
     } catch (e) {
         // syntax error
         block.error = e;

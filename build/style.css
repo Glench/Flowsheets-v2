@@ -30,7 +30,7 @@ body {
   padding: 2px 2px;
 }
 #main [id^="code-"] {
-  font-family: "Source Code Pro", "Andale Mono", monospace;
+  font-family: "Menlo", "Andale Mono", monospace;
   width: 125px;
 }
 #main [id^="output-"] {
