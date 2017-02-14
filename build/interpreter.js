@@ -98,7 +98,6 @@ function generate_unique_name() {
     var current_test_name = alpha_index;
     while (existing_names.indexOf(current_test_name) >= 0) {
         alpha_index = String.fromCharCode(alpha_index.charCodeAt(0) + 1);
-        console.log(alpha_index);
         current_test_name = alpha_index;
     }
     return current_test_name;
@@ -184,7 +183,8 @@ function python_evaluate(block) {
         ui.render_output(block);
     });
     fail_queue.push(function (data) {
-        throw `error in evaling Block ${block.name}! ${data}`;
+        block.error = `error in evaling Block ${block.name}! ${data}`;
+        ui.render_output(block);
     });
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`);
 }

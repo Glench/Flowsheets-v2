@@ -90,7 +90,10 @@ function render_output(block: Block) {
     }
 };
 function fade_background_color($element, alpha, color) {
-    if (alpha < 0) { return }
+    if (alpha < 0) {
+        $element.css('background-color', 'inherit')
+        return
+    }
     alpha -= .04
     var new_color = color.replace(' ', ` ${alpha})`)
     $element.css('background-color', new_color)

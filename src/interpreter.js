@@ -198,7 +198,8 @@ function python_evaluate(block: Block):void {
         ui.render_output(block);
     });
     fail_queue.push(function(data: string) {
-        throw `error in evaling Block ${block.name}! ${data}`;
+        block.error = `error in evaling Block ${block.name}! ${data}`;
+        ui.render_output(block);
     });
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
 }

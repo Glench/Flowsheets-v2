@@ -81,6 +81,7 @@ function render_output(block) {
 };
 function fade_background_color($element, alpha, color) {
     if (alpha < 0) {
+        $element.css('background-color', 'inherit');
         return;
     }
     alpha -= .04;

@@ -24,8 +24,17 @@ body {
   text-align: center;
   background-color: #000;
   color: white;
-  font: bold 15px/1 "Helvetica Nueue", sans-serif;
-  width: 122px;
+  font: bold 15px/1.3 "Helvetica Nueue", sans-serif;
+  width: 126px;
   border: 1px solid #eee;
-  padding: 2px 4px;
+  padding: 2px 2px;
+}
+#main [id^="code-"] {
+  font-family: "Source Code Pro", "Andale Mono", monospace;
+  width: 125px;
+}
+#main [id^="output-"] {
+  font-size: 13px;
+  width: 125px;
+  background-color: #ffff00;
 }
