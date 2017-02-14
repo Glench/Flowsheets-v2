@@ -1,4 +1,5 @@
 const $ = require('jquery');
+
 const interpreter = require('./interpreter');
 const Block = interpreter.Block;
 
@@ -20,7 +21,7 @@ function initialize_grid() {
             var onClick = function (row, column) {
                 return function (evt) {
                     var block = interpreter.create_block(null, '10+20');
-                    render_block(block, row, column);
+                    create_and_render_block(block, row, column);
                 };
             };
             var $td = $('<td>').on('click', onClick(row, column));
@@ -31,7 +32,7 @@ function initialize_grid() {
 }
 module.exports.initialize_grid = initialize_grid;
 
-function render_block(block, row, column) {
+function create_and_render_block(block, row, column) {
     var ui_block = new UIBlock();
     ui_block.row = row;
     ui_block.column = column;
@@ -65,7 +66,7 @@ function render_block(block, row, column) {
     });
     $('#main tr').eq(row + 2).find('td').eq(column).html($output);
 };
-module.exports.render_block = render_block;
+module.exports.create_and_render_block = create_and_render_block;
 
 function render_output(block) {
     var $output = $('#output-' + block.name);

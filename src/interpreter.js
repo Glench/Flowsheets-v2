@@ -187,7 +187,7 @@ function python_declare(block: Block):void {
 function python_evaluate(block: Block):void {
     // get the value of an expression
     success_queue.push(function(data: string) {
-        console.log(`eval ran successfully for "Block ${block.name}"`)
+        // console.log(`eval ran successfully for "Block ${block.name}"`)
         try {
             // for some reason, eval-ing JSON object literals is a syntax error??
             eval(`block.output = ${data}`);
