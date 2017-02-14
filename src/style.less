@@ -24,6 +24,19 @@ body {
         padding: 8px 0;
     }
 
+    [id^="name-"] {
+        @padding-x: 2px;
+        @border-x: 1px;
+
+        text-align: center;
+        background-color: #000;
+        color: white;
+        font: bold 15px/1.3 "Helvetica Nueue", sans-serif;
+        width: 132px - 2*@padding-x - 2*@border-x;
+        border: @border-x solid #eee;
+        padding: 2px @padding-x; 
+    }
     [id^="output-"] {
+        font-size: 12px;
     }
 }

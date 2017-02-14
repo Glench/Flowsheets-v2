@@ -43,7 +43,8 @@ function create_and_render_block(block, row, column) {
     var $name = $('<input>').attr('id', 'name-' + block.name).attr('value', block.name).on('change', function (evt) {
         var old_name = block.name;
         var new_name = interpreter.change_name(block, evt.target.value);
-        $(evt.target).val(new_name);
+        $(evt.target).val(new_name); // rewrite in case the name changed because of sanitization
+        $(evt.target).blur();
 
         $('#code-' + old_name).attr('id', 'code-' + block.name);
         $('#name-' + old_name).attr('id', 'name-' + block.name);

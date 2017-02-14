@@ -172,7 +172,7 @@ function python_declare(block) {
 function python_evaluate(block) {
     // get the value of an expression
     success_queue.push(function (data) {
-        console.log(`eval ran successfully for "Block ${block.name}"`);
+        // console.log(`eval ran successfully for "Block ${block.name}"`)
         try {
             // for some reason, eval-ing JSON object literals is a syntax error??
             eval(`block.output = ${data}`);
@@ -195,7 +195,7 @@ function change_name(block, name) {
 
     var python_code = `${block.name} = ${old_name}; del ${old_name}`;
 
-    var callback = () => console.log(`Block ${old_name} name changed to ${block.name}`);
+    var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
     success_queue.push(callback);
     fail_queue.push(callback);
     python_interpreter.stdin.write(`__EXEC:${python_code}\n`);

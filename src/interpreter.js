@@ -101,7 +101,6 @@ function generate_unique_name():string {
     var current_test_name = alpha_index;
     while (existing_names.indexOf(current_test_name) >= 0) {
         alpha_index = String.fromCharCode(alpha_index.charCodeAt(0) + 1);
-        console.log(alpha_index)
         current_test_name = alpha_index;
     }
     return current_test_name;
@@ -210,7 +209,7 @@ function change_name(block: Block, name: string):string {
 
     var python_code = `${block.name} = ${old_name}; del ${old_name}`;
 
-    var callback = () => console.log(`Block ${old_name} name changed to ${block.name}`)
+    var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
     success_queue.push(callback);
     fail_queue.push(callback)
     python_interpreter.stdin.write(`__EXEC:${python_code}\n`)

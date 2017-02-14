@@ -20,3 +20,12 @@ body {
   border-spacing: 0;
   padding: 8px 0;
 }
+#main [id^="name-"] {
+  text-align: center;
+  background-color: #000;
+  color: white;
+  font: bold 15px/1 "Helvetica Nueue", sans-serif;
+  width: 122px;
+  border: 1px solid #eee;
+  padding: 2px 4px;
+}
