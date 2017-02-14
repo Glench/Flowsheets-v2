@@ -225,7 +225,7 @@ function change_code(block, code) {
     }
 
     block.depends_on = blocks.filter(function (test_block) {
-        return _.contains(names, test_block.name) && test_block.name !== block.name;
+        return _.contains(names, test_block.name);
     });
 
     update_other_blocks_because_this_one_changed(block);

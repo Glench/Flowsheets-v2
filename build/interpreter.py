@@ -2,6 +2,8 @@ import sys
 import json
 from datetime import datetime
 
+user_globals = {'json': json}
+
 with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
 
     while True:
@@ -28,13 +30,13 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
             try:
                 if cleaned_payload.startswith('__EXEC:'):
                     cleaned_payload = cleaned_payload[7:]
-                    exec(cleaned_payload)
+                    exec(cleaned_payload, user_globals)
                     sys.stdout.write('Payload executed successfully: {}\n'.format(cleaned_payload))
                     sys.stdout.flush()
 
                 elif cleaned_payload.startswith('__EVAL:'):
                     cleaned_payload = cleaned_payload[7:]
-                    sys.stdout.write(eval(cleaned_payload)+'\n')
+                    sys.stdout.write(eval(cleaned_payload, user_globals)+'\n')
                     sys.stdout.flush()
 
                 else:
