@@ -165,10 +165,10 @@ function python_import(python_code: string) {
 
     // @Cleanup: If an import box changes, should delete old names
     success_queue.push(function(data: string) {
-        console.log('import succeed: ', data)
+
     })
     fail_queue.push(function(data: string) {
-        console.log('import fail: ', data)
+
     })
     python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`)
 }
@@ -196,7 +196,6 @@ function python_declare(block: Block) {
 function python_evaluate(block: Block) {
     // get the value of an expression
     success_queue.push(function(data: string) {
-        // console.log(`eval ran successfully for "Block ${block.name}"`)
         try {
             // for some reason, eval-ing JSON object literals is a syntax error??
             eval(`block.output = ${data}`);
