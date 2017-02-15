@@ -22,7 +22,6 @@ function get_user_identifiers(python_expression) {
         return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key);
     });
 }
-module.exports.get_user_identifiers = get_user_identifiers;
 
 var stdout_accumulation = [];
 python_interpreter.stdout.setEncoding('utf8');
@@ -135,6 +134,8 @@ function create_block(name, code) {
 
     blocks.push(block);
 
+    python_declare(block);
+
     update_other_blocks_because_this_one_changed(block);
 
     return block;
@@ -156,83 +157,87 @@ function python_exec(python_code) {
     python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
 };
 
-function python_run(block) {
+function python_declare(block) {
+    // a_ means 'for a_ in a: ...'
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length - 1] == '_'));
 
-    // ==== function with map ====
-    // x = []
-    // for thing in a:
-    //   x.append('{}{}'.format(thing, b_))
-    // return x
-
-    // ==== expression with map ====
-    // 'butt-{}'.format(a_)
-
+    var python_function_declaration;
+    var python_function_name = `_${block.name}_function`;
     if (block.code.indexOf('return') > -1) {
-        // ==== function ====
-        // x = []
-        // for thing in a:
-        //   x.append(thing)
-        // return x
-
-        var no_op = function () {};
-        var success = function (data) {
-            block.error = '';
-            ui.render_error(block);
-        };
-        var fail = function (data) {
-            success_queue[0] = no_op; // remove callback after running this function
-            success_queue[1] = no_op; // remove callback trying to get the result of this function
-            fail_queue[0] = no_op; // remove callback after running this function
-            fail_queue[1] = no_op; // remove callback trying to get the result of this function
-
-            block.error = data;
-
-            ui.render_error(block);
-        };
-
-        success_queue.push(success);
-        fail_queue.push(fail);
-
-        var python_function_name = `_${block.name}_function`;
-
-        var define_python_function = `def ${python_function_name}():
+        // function
+        if (map_variables.length > 0) {
+            // need arguments
+            python_function_declaration = `def ${python_function_name}(${map_variables.join(', ')}):
   ${block.code.split('\n').join('\n  ')}`;
-
-        success_queue.push(success);
-        fail_queue.push(fail);
-
-        // define function to run
-        python_exec(define_python_function);
-        // run function and assign to variable name
-        python_exec(`${block.name} = ${python_function_name}()`);
+        } else {
+            python_function_declaration = `def ${python_function_name}():
+  ${block.code.split('\n').join('\n  ')}`;
+        }
+    } else if (map_variables.length > 0) {
+        // lambda
+        python_function_declaration = `${python_function_name} = lambda ${map_variables.join(', ')}: ${block.code}`;
     } else {
-        // ==== expression ====
-        // e.g. 'butt-{}'.format(some_string)
-
-        success_queue.push(function (data) {
-            // remove error
-            block.error = '';
-            ui.render_error(block);
-        });
-        fail_queue.push(function (data) {
-            block.error = data;
-
-            // remove next command, which is always an eval/get_python_value for the same variable
-            success_queue[0] = function () {};
-            fail_queue[0] = function () {};
-
-            ui.render_error(block);
-        });
-
-        var python_code = `${block.name} = ${block.code}`;
-        python_exec(python_code);
+        // just an expression, don't declare anything
+        return;
     }
 
-    // a = [1,2,3]
-    // b = ['a', 'b', 'c']
+    console.log('declaring python: ', python_function_declaration);
+    var no_op = function () {};
+    var success = function (data) {
+        block.error = '';
+        ui.render_error(block);
+    };
+    var fail = function (data) {
+        success_queue[0] = no_op; // remove callback handling running this function
+        success_queue[1] = no_op; // remove callback handling getting the result of this function
+        fail_queue[0] = no_op; // remove callback handling running this function
+        fail_queue[1] = no_op; // remove callback handling getting the result of this function
 
-    // c = a_+1  => def _c_function(a_): return a_+1; c = [_c_function(a_) for a_ in izip(a)]
-    // d = '{}{}'.format(a_,b_) => def _d_function(a_,b_): '{}{}'.format(a_,b_); d = [_d_function(a_,b_) for a_,b_ in izip(a,b)]
+        block.error = data;
+
+        ui.render_error(block);
+    };
+
+    success_queue.push(success);
+    fail_queue.push(fail);
+    python_exec(python_function_declaration);
+}
+
+function python_run(block) {
+
+    var python_code;
+
+    // a_ means 'for a_ in a: ...'
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length - 1] == '_'));
+    if (block.code.indexOf('return') > -1) {
+        python_code = `${block.name} = _${block.name}_function()`;
+    } else if (map_variables.length > 1) {
+        var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
+        python_code = `${block.name} = [_${block.name}_function(${map_variables.join(', ')}) for ${map_variables.join(',')} in izip(${zip_variables.join(', ')})]`;
+    } else if (map_variables.length == 1) {
+        var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
+        python_code = `${block.name} = [_${block.name}_function(${map_variables.join(', ')}[0]) for ${map_variables.join(',')} in izip(${zip_variables.join(', ')})]`;
+    } else {
+        python_code = `${block.name} = ${block.code}`;
+    }
+    console.log('running python: ', python_code);
+
+    var no_op = function () {};
+    var success = function (data) {
+        block.error = '';
+        ui.render_error(block);
+    };
+    var fail = function (data) {
+        success_queue[0] = no_op; // remove callback trying to get value of this function
+        fail_queue[0] = no_op; // remove callback trying to get value of this function
+
+        block.error = data;
+        ui.render_error(block);
+    };
+
+    success_queue.push(success);
+    fail_queue.push(fail);
+    python_exec(python_code);
 }
 
 function get_python_value(block) {
@@ -325,12 +330,13 @@ function change_code(block, code) {
     block.code = code;
 
     // update dependencies
+
     try {
         var names = get_user_identifiers(block.code);
     } catch (e) {
-        // syntax error
+        // syntax error in filbert parsing most likely
         block.error = e;
-        ui.render_output(block);
+        ui.render_error(block);
         return;
     }
 
@@ -344,6 +350,8 @@ function change_code(block, code) {
     block.depends_on = blocks.filter(function (test_block) {
         return _.contains(names, test_block.name);
     });
+
+    python_declare(block);
 
     update_other_blocks_because_this_one_changed(block);
 }

@@ -1,8 +1,9 @@
 import sys
 import json
+from itertools import izip
 from datetime import datetime
 
-user_globals = {'json': json}
+user_globals = {'json': json, 'izip': izip}
 
 with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
 
