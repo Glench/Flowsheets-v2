@@ -31,7 +31,7 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
                 if cleaned_payload.startswith('__EXEC:'):
                     cleaned_payload = cleaned_payload[7:]
                     exec(cleaned_payload, user_globals)
-                    sys.stdout.write('Payload executed successfully: {}\n'.format(cleaned_payload))
+                    sys.stdout.write('Payload executed successfully: {}\n'.format(cleaned_payload.replace('\n', '__NEWLINE__')))
                     sys.stdout.flush()
 
                 elif cleaned_payload.startswith('__EVAL:'):

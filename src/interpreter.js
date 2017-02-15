@@ -170,30 +170,100 @@ function python_import(python_code: string) {
     fail_queue.push(function(data: string) {
 
     })
-    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`)
+    python_exec(python_code)
 }
 module.exports.python_import = python_import;
 
-function python_declare(block: Block) {
-    // set up an expression or function to run. equivalent to a declaration.
-    success_queue.push(function(data: string) {
-        block.error = ''
-        ui.render_output(block);
-    });
-    fail_queue.push(function(data: string) {
-        block.error = data;
+function python_exec(python_code: string) {
+    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
+};
 
-        // remove next command, which is always an EVAL for the same variable
-        success_queue[0] = function() {}
-        fail_queue[0] = function() {}
+function python_run(block: Block) {
 
-        ui.render_output(block);
-    });
-    var python_code = `${block.name} = ${block.code}`
-    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`)
+
+    // ==== function with map ====
+    // x = []
+    // for thing in a:
+    //   x.append('{}{}'.format(thing, b_))
+    // return x
+
+    // ==== expression with map ====
+    // 'butt-{}'.format(a_)
+
+    if (block.code.indexOf('return') > -1) {
+        // ==== function ====
+        // x = []
+        // for thing in a:
+        //   x.append(thing)
+        // return x
+
+        var no_op = function() {};
+        var success = function(data: string) {
+            block.error = '';
+            ui.render_output(block);
+        }
+        var fail = function(data: string) {
+            block.error = data;
+
+            success_queue[0] = no_op; // remove callback after running this function
+            success_queue[1] = no_op; // remove callback trying to get the result of this function
+            fail_queue[0] = no_op; // remove callback after running this function
+            fail_queue[1] = no_op; // remove callback trying to get the result of this function
+
+            ui.render_output(block);
+        }
+
+        success_queue.push(success);
+        fail_queue.push(fail);
+
+        var python_function_name = `_${block.name}_function`
+
+        var define_python_function = `def ${python_function_name}():
+  ${block.code.split('\n').join('\n  ')}`;
+
+        success_queue.push(success);
+        fail_queue.push(fail);
+
+
+        // define function to run
+        python_exec(define_python_function)
+        // run function and assign to variable name
+        python_exec(`${block.name} = ${python_function_name}()`)
+
+    } else {
+        // ==== expression ====
+        // e.g. 'butt-{}'.format(some_string)
+
+        success_queue.push(function(data: string) {
+            // remove error
+            block.error = ''
+            ui.render_output(block);
+        });
+        fail_queue.push(function(data: string) {
+            block.error = data;
+
+            // remove next command, which is always an eval/get_python_value for the same variable
+            success_queue[0] = function() {}
+            fail_queue[0] = function() {}
+
+            ui.render_output(block);
+        });
+
+        var python_code = `${block.name} = ${block.code}`;
+        python_exec(python_code)
+    }
+
+
+
+    // a = [1,2,3]
+    // b = ['a', 'b', 'c']
+
+    // c = a_+1  => def _c_function(a_): return a_+1; c = [_c_function(a_) for a_ in izip(a)]
+    // d = '{}{}'.format(a_,b_) => def _d_function(a_,b_): '{}{}'.format(a_,b_); d = [_d_function(a_,b_) for a_,b_ in izip(a,b)]
+
 }
 
-function python_evaluate(block: Block) {
+function get_python_value(block: Block) {
     // get the value of an expression
     success_queue.push(function(data: string) {
         try {
@@ -232,13 +302,18 @@ function change_name(block: Block, name: string):string {
                     new_code.push('')
                 } else {
                     if (!token.value) {
-                        // e.g. token = {value: undefined, type: {type: '['}}
-                        token.value = token.type.type;
+                        if (token.type.type === 'newline') {
+                            // e.g. token = {value: undefined, type: {type: 'newline'}}
+                            token.value = '\n'
+                        } else {
+                            // e.g. token = {value: undefined, type: {type: '['}}
+                            token.value = token.type.type;
+                        }
                     } else if (token.type.type === 'string') {
+                        // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
                         token.value = `${test_block.code[token.start]}${token.value}${test_block.code[token.end-1]}`;
-                    } else if (token.type.type === 'newline') {
-                        token.value = '\n'
                     }
+
                     new_code[new_code.length-1] += token.value;
                 }
                 token = advance_token();
@@ -292,8 +367,8 @@ function update_other_blocks_because_this_one_changed(updatedBlock: Block):void 
     var updated_blocks: Block[] = [updatedBlock];
     while (updated_blocks.length) {
         var block = updated_blocks.shift(); // pop off front of array
-        python_declare(block); // @Cleanup: should refactor so expressions get run as functions
-        python_evaluate(block); 
+        python_run(block);
+        get_python_value(block); 
         blocks.forEach(function(should_update_block:Block) {
             if (should_update_block.depends_on.includes(block)) {
                 updated_blocks.push(should_update_block)
