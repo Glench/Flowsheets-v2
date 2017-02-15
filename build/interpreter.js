@@ -185,6 +185,36 @@ function change_name(block, name) {
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
 
+    // Update references to this block in other blocks' code
+    // Anything that depends on `block` should have its code updated
+    blocks.forEach(test_block => {
+        if (_.contains(test_block.depends_on, block)) {
+            // 'a+1' => ['','+1']
+            // '1+a+1' => ['1+','+1']
+            var advance_token = filbert.tokenize(test_block.code);
+            var new_code = [''];
+            var token = advance_token();
+            while (token.type.type !== 'eof') {
+                if (token.value === old_name) {
+                    new_code.push('');
+                } else {
+                    if (!token.value) {
+                        // e.g. token = {value: undefined, type: {type: '['}}
+                        token.value = token.type.type;
+                    } else if (token.type.type === 'string') {
+                        token.value = `${test_block.code[token.start]}${token.value}${test_block.code[token.end - 1]}`;
+                    } else if (token.type.type === 'newline') {
+                        token.value = '\n';
+                    }
+                    new_code[new_code.length - 1] += token.value;
+                }
+                token = advance_token();
+            }
+            test_block.code = new_code.join(block.name);
+            ui.render_code(test_block);
+        }
+    });
+
     var python_code = `${block.name} = ${old_name}; del ${old_name}`;
 
     var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
@@ -239,42 +269,3 @@ function update_other_blocks_because_this_one_changed(updatedBlock) {
     }
 }
 module.exports.update_other_blocks_because_this_one_changed = update_other_blocks_because_this_one_changed;
-
-// testing
-/*
-var block1 = new Block();
-block1.name = 'a';
-block1.code = 'a = 1'
-blocks.push(block1)
-
-var block2 = new Block();
-block2.name = 'b'
-block2.code = 'b = a+1'
-block2.depends_on.push(block1);
-blocks.push(block2)
-
-var block3 = new Block();
-block3.name = 'c'
-block3.code = 'c = a+3'
-block3.depends_on.push(block1);
-blocks.push(block3)
-
-var block4 = new Block();
-block4.name = 'd'
-block4.code = 'd = "d"'
-blocks.push(block4)
-
-var block5 = new Block();
-block5.name = 'e'
-block5.code = 'e = c*"e"'
-block5.depends_on.push(block3);
-blocks.push(block5)
-
-update_other_blocks_because_this_one_changed(block1)
-*/
-
-// python_declare(block1)
-// python_declare(block2)
-
-// python_evaluate(block1)
-// python_evaluate(block2)

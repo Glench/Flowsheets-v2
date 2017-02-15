@@ -1,4 +1,5 @@
 const $ = require('jquery');
+const _ = require('underscore');
 
 const interpreter = require('./interpreter');
 const Block = interpreter.Block;
@@ -20,7 +21,8 @@ function initialize_grid() {
         for (var column = 0; column < columns; ++column) {
             var onClick = function (row, column) {
                 return function (evt) {
-                    var block = interpreter.create_block(null, '10+20');
+                    var block = interpreter.create_block(null, 'a+1');
+                    block.depends_on = [interpreter.blocks[0]];
                     create_and_render_block(block, row, column);
                 };
             };
@@ -43,6 +45,7 @@ function create_and_render_block(block, row, column) {
     var $name = $('<input>').attr('id', 'name-' + block.name).attr('value', block.name).on('change', function (evt) {
         var old_name = block.name;
         var new_name = interpreter.change_name(block, evt.target.value);
+
         $(evt.target).val(new_name); // rewrite in case the name changed because of sanitization
         $(evt.target).blur();
 
@@ -68,6 +71,13 @@ function create_and_render_block(block, row, column) {
     $('#main tr').eq(row + 2).find('td').eq(column).html($output);
 };
 module.exports.create_and_render_block = create_and_render_block;
+
+function render_code(block) {
+    var $code = $('#code-' + block.name);
+    $code.val(block.code);
+    fade_background_color($code, 1, 'rgb(40,40,40, ');
+}
+module.exports.render_code = render_code;
 
 function render_output(block) {
     var $output = $('#output-' + block.name);
