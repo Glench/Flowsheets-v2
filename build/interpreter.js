@@ -257,7 +257,7 @@ function get_python_value(block) {
 }
 
 function replace_python_names(old_code, to_replace, replace_with) {
-    // finds names in python code and replaces them 
+    // replace `to_replace` with `replace_with` in `old_code`
 
     // 'a+1' => ['','+1']
     // '1+a+1' => ['1+','+1']
@@ -304,7 +304,13 @@ function change_name(block, name) {
         }
     });
 
-    var python_code = `${block.name} = ${old_name}; del ${old_name}`;
+    if (block.code.indexOf('return') > -1) {
+        var old_function_name = `_${old_name}_function`;
+        var new_function_name = `_${block.name}_function`;
+        var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name}`;
+    } else {
+        var python_code = `${block.name} = ${old_name}; del ${old_name}`;
+    }
 
     var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
     success_queue.push(callback);

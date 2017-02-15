@@ -323,7 +323,6 @@ function change_name(block: Block, name: string):string {
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
 
-
     // Update references to this block in other blocks' code
     // Anything that depends on `block` should have its code updated
     blocks.forEach(test_block => {
@@ -333,7 +332,13 @@ function change_name(block: Block, name: string):string {
         }
     })
 
-    var python_code = `${block.name} = ${old_name}; del ${old_name}`;
+    if (block.code.indexOf('return') > -1) {
+        var old_function_name = `_${old_name}_function`;
+        var new_function_name = `_${block.name}_function`;
+        var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name}`;
+    } else {
+        var python_code = `${block.name} = ${old_name}; del ${old_name}`;
+    }
 
     var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
     success_queue.push(callback);
