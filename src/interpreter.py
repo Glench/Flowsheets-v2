@@ -22,6 +22,10 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
         payload = accumulating_payload
         # payload = '__EXEC:a = 1'
         # payload = '__EVAL:json.dumps(a)'
+        
+        # payload = '__EXEC:def _b_function():__NEWLINE__x = 5__NEWLINE__return x'
+        # payload = '__EXEC:b = _b_function()'
+        # payload = '__EVAL:json.dumps(b)'
 
         if payload:
 

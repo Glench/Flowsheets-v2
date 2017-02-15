@@ -105,15 +105,21 @@ function render_code(block: Block) {
 }
 module.exports.render_code = render_code;
 
-function render_output(block: Block) {
+function render_error(block: Block) {
     var $output = $('#output-'+block.name)
     if (block.error) {
         $output.val(block.error)    
         $output.css('background-color', '#f00')
     } else {
-        $output.val(block.output);
-        fade_background_color($output, 1, 'rgba(255,255,0, ')
+        $output.css('background-color', 'inherit')
     }
+}
+module.exports.render_error = render_error;
+
+function render_output(block: Block) {
+    var $output = $('#output-'+block.name)
+    $output.val(block.output);
+    fade_background_color($output, 1, 'rgba(255,255,0, ')
 };
 module.exports.render_output = render_output;
 

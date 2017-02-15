@@ -200,17 +200,17 @@ function python_run(block: Block) {
         var no_op = function() {};
         var success = function(data: string) {
             block.error = '';
-            ui.render_output(block);
+            ui.render_error(block);
         }
         var fail = function(data: string) {
-            block.error = data;
-
             success_queue[0] = no_op; // remove callback after running this function
             success_queue[1] = no_op; // remove callback trying to get the result of this function
             fail_queue[0] = no_op; // remove callback after running this function
             fail_queue[1] = no_op; // remove callback trying to get the result of this function
 
-            ui.render_output(block);
+            block.error = data;
+
+            ui.render_error(block);
         }
 
         success_queue.push(success);
@@ -237,7 +237,7 @@ function python_run(block: Block) {
         success_queue.push(function(data: string) {
             // remove error
             block.error = ''
-            ui.render_output(block);
+            ui.render_error(block);
         });
         fail_queue.push(function(data: string) {
             block.error = data;
@@ -246,7 +246,7 @@ function python_run(block: Block) {
             success_queue[0] = function() {}
             fail_queue[0] = function() {}
 
-            ui.render_output(block);
+            ui.render_error(block);
         });
 
         var python_code = `${block.name} = ${block.code}`;
@@ -270,6 +270,7 @@ function get_python_value(block: Block) {
             // for some reason, eval-ing JSON object literals is a syntax error??
             eval(`block.output = ${data}`);
             block.error = '';
+            ui.render_error(block)
         } catch(e) {
             throw `Error on evaluating. Data coming out of 'Block ${block.name}' is bad: ${data}`;
         }
@@ -278,9 +279,44 @@ function get_python_value(block: Block) {
     });
     fail_queue.push(function(data: string) {
         block.error = `error in evaling Block ${block.name}! ${data}`;
-        ui.render_output(block);
+        ui.render_error(block);
     });
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
+}
+
+function replace_python_names(old_code: string, to_replace: string, replace_with: string): string {
+    // replace `to_replace` with `replace_with` in `old_code`
+
+    // 'a+1' => ['','+1']
+    // '1+a+1' => ['1+','+1']
+    var advance_token = filbert.tokenize(old_code)
+    var new_code = [''];
+    var token = advance_token();
+    while (token.type.type !== 'eof') {
+        if (token.value === to_replace) {
+            new_code.push('')
+        } else {
+            if (!token.value) {
+                if (token.type.type === 'newline') {
+                    // e.g. token = {value: undefined, type: {type: 'newline'}}
+                    token.value = '\n'
+                } else {
+                    // e.g. token = {value: undefined, type: {type: '['}}
+                    token.value = token.type.type;
+                }
+            } else if (token.type.type === 'string') {
+                // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
+                token.value = `${old_code[token.start]}${token.value}${old_code[token.end-1]}`;
+            } else if (token.value === 'return' && token.type.keyword === 'return') {
+                // e.g. token = {value: 'return', type: {keyword: 'return'}}
+                token.value = 'return ' // needs to have space on the end
+            }
+
+            new_code[new_code.length-1] += token.value;
+        }
+        token = advance_token();
+    }
+    return new_code.join(replace_with);
 }
 
 function change_name(block: Block, name: string):string {
@@ -292,33 +328,7 @@ function change_name(block: Block, name: string):string {
     // Anything that depends on `block` should have its code updated
     blocks.forEach(test_block => {
         if (_.contains(test_block.depends_on, block)) {
-            // 'a+1' => ['','+1']
-            // '1+a+1' => ['1+','+1']
-            var advance_token = filbert.tokenize(test_block.code)
-            var new_code = [''];
-            var token = advance_token();
-            while (token.type.type !== 'eof') {
-                if (token.value === old_name) {
-                    new_code.push('')
-                } else {
-                    if (!token.value) {
-                        if (token.type.type === 'newline') {
-                            // e.g. token = {value: undefined, type: {type: 'newline'}}
-                            token.value = '\n'
-                        } else {
-                            // e.g. token = {value: undefined, type: {type: '['}}
-                            token.value = token.type.type;
-                        }
-                    } else if (token.type.type === 'string') {
-                        // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
-                        token.value = `${test_block.code[token.start]}${token.value}${test_block.code[token.end-1]}`;
-                    }
-
-                    new_code[new_code.length-1] += token.value;
-                }
-                token = advance_token();
-            }
-            test_block.code = new_code.join(block.name);
+            test_block.code = replace_python_names(test_block.code, old_name, block.name)
             ui.render_code(test_block)
         }
     })
