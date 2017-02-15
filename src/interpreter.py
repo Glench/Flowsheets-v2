@@ -22,7 +22,7 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
         payload = accumulating_payload
         # payload = '__EXEC:a = 1'
         # payload = '__EVAL:json.dumps(a)'
-        
+
         # payload = '__EXEC:def _b_function():__NEWLINE__x = 5__NEWLINE__return x'
         # payload = '__EXEC:b = _b_function()'
         # payload = '__EVAL:json.dumps(b)'
@@ -46,9 +46,12 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
                 else:
                     raise Exception('Payload did not start with execution instruction __EXEC or __EVAL')
 
-                log_file.write(cleaned_payload+'\n')
-                log_file.flush()
 
             except Exception as e:
                 sys.stderr.write('Error while running payload "{}": {}\n'.format(payload, e))
                 sys.stderr.flush()
+
+            log_file.write(cleaned_payload+'\n')
+            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'json')}
+            log_file.write('current globals: {}\n'.format(log_globals))
+            log_file.flush()
