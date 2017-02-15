@@ -85,7 +85,7 @@ module.exports.create_and_render_block = create_and_render_block;
 function render_code(block: Block) {
     var $code = $('#code-'+block.name);
     $code.val(block.code);
-    fade_background_color($code, 1, 'rgb(40,40,40, ')
+    fade_background_color($code, 1, 'rgba(220,220,220, ')
 }
 module.exports.render_code = render_code;
 
@@ -100,6 +100,7 @@ function render_output(block: Block) {
     }
 };
 function fade_background_color($element, alpha, color) {
+    if (color[3] !== 'a') { throw 'Color needs to start with "rgba"'}
     if (alpha < 0) {
         $element.css('background-color', 'inherit')
         return
