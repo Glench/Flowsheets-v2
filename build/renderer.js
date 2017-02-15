@@ -98,7 +98,6 @@ module.exports.render_code = render_code;
 function render_output(block) {
     var $output = $('#output-' + block.name);
     if (block.error) {
-        console.log('hi');
         $output.val(block.error);
         $output.css('background-color', '#f00');
     } else {
@@ -112,11 +111,11 @@ function fade_background_color($element, alpha, color) {
     if (color[3] !== 'a') {
         throw 'Color needs to start with "rgba"';
     }
+    alpha -= .04;
     if (alpha < 0) {
         $element.css('background-color', 'inherit');
         return;
     }
-    alpha -= .04;
     var new_color = color.replace(' ', ` ${alpha})`);
     $element.css('background-color', new_color);
     setTimeout(fade_background_color, 1000 / 60, $element, alpha, color);

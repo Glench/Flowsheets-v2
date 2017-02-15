@@ -119,11 +119,11 @@ module.exports.render_output = render_output;
 
 function fade_background_color($element, alpha, color) {
     if (color[3] !== 'a') { throw 'Color needs to start with "rgba"'}
+    alpha -= .04
     if (alpha < 0) {
         $element.css('background-color', 'inherit')
         return
     }
-    alpha -= .04
     var new_color = color.replace(' ', ` ${alpha})`)
     $element.css('background-color', new_color)
     setTimeout(fade_background_color, 1000/60, $element, alpha, color);
