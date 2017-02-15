@@ -15,6 +15,14 @@ module.exports.columns = columns;
 class UIBlock {};
 module.exports.UIBlock = UIBlock;
 
+function initialize() {
+    initialize_grid();
+    $('#new-import').on('click', function (evt) {
+        create_and_render_import();
+    });
+}
+module.exports.initialize = initialize;
+
 function initialize_grid() {
     for (var row = 0; row < rows; ++row) {
         var $tr = $('<tr>');
@@ -32,7 +40,15 @@ function initialize_grid() {
         $('#main').append($tr);
     }
 }
-module.exports.initialize_grid = initialize_grid;
+
+function create_and_render_import() {
+    var $input = $('<input>').attr('class', 'import');
+    $input.on('change', function (evt) {
+        interpreter.python_import(evt.target.value);
+    });
+    $('#imports').append($input);
+    $input.focus();
+}
 
 function create_and_render_block(block, row, column) {
     var ui_block = new UIBlock();
@@ -82,13 +98,16 @@ module.exports.render_code = render_code;
 function render_output(block) {
     var $output = $('#output-' + block.name);
     if (block.error) {
-        $output.attr('value', block.error);
+        console.log('hi');
+        $output.val(block.error);
         $output.css('background-color', '#f00');
     } else {
-        $output.attr('value', block.output);
+        $output.val(block.output);
         fade_background_color($output, 1, 'rgba(255,255,0, ');
     }
 };
+module.exports.render_output = render_output;
+
 function fade_background_color($element, alpha, color) {
     if (color[3] !== 'a') {
         throw 'Color needs to start with "rgba"';
@@ -102,4 +121,3 @@ function fade_background_color($element, alpha, color) {
     $element.css('background-color', new_color);
     setTimeout(fade_background_color, 1000 / 60, $element, alpha, color);
 }
-module.exports.render_output = render_output;

@@ -32,6 +32,10 @@
 
   </head>
   <body>
+    <div id="imports">
+    </div>
+    <button id="new-import">new import</button>
+
     <table id="main">
       <tbody>
 
@@ -44,7 +48,7 @@
       const interpreter = require('./interpreter.js')
       const $ = require('jquery')
 
-      ui.initialize_grid();
+      ui.initialize();
 
       var block = interpreter.create_block('a', '1+1');
 

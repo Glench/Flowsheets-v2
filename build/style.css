@@ -11,16 +11,24 @@ body {
   font: 14px/1 "Courier", monospace;
   color: black;
 }
-#main {
+#imports {
+  display: inline-block;
+  margin-bottom: 3px;
+}
+button#new-import {
+  display: inline-block;
+  vertical-align: top;
+}
+table#main {
   border-collapse: collapse;
 }
-#main td {
+table#main td {
   min-width: 86px;
   border: 1px solid #ddd;
   border-spacing: 0;
   padding: 8px 0;
 }
-#main [id^="name-"] {
+table#main [id^="name-"] {
   text-align: center;
   background-color: #000;
   color: white;
@@ -29,11 +37,11 @@ body {
   border: 1px solid #eee;
   padding: 2px 2px;
 }
-#main [id^="code-"] {
+table#main [id^="code-"] {
   font-family: "Menlo", "Andale Mono", monospace;
   width: 125px;
 }
-#main [id^="output-"] {
+table#main [id^="output-"] {
   font-size: 13px;
   width: 125px;
   background-color: #ffff00;

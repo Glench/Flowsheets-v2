@@ -159,7 +159,22 @@ function create_block(name: ?string, code: string) {
 }
 module.exports.create_block = create_block;
 
-function python_declare(block: Block):void {
+function python_import(python_code: string) {
+    // e.g. 'import time'
+    // e.g. 'from datetime import datetime'
+
+    // @Cleanup: If an import box changes, should delete old names
+    success_queue.push(function(data: string) {
+        console.log('import succeed: ', data)
+    })
+    fail_queue.push(function(data: string) {
+        console.log('import fail: ', data)
+    })
+    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`)
+}
+module.exports.python_import = python_import;
+
+function python_declare(block: Block) {
     // set up an expression or function to run. equivalent to a declaration.
     success_queue.push(function(data: string) {
         block.error = ''
@@ -169,8 +184,8 @@ function python_declare(block: Block):void {
         block.error = data;
 
         // remove next command, which is always an EVAL for the same variable
-        success_queue.shift()
-        fail_queue.shift()
+        success_queue[0] = function() {}
+        fail_queue[0] = function() {}
 
         ui.render_output(block);
     });
@@ -178,7 +193,7 @@ function python_declare(block: Block):void {
     python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`)
 }
 
-function python_evaluate(block: Block):void {
+function python_evaluate(block: Block) {
     // get the value of an expression
     success_queue.push(function(data: string) {
         // console.log(`eval ran successfully for "Block ${block.name}"`)
