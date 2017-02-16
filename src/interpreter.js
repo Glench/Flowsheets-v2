@@ -233,18 +233,14 @@ function python_run(block: Block) {
     var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length-1] == '_'));
     if (block.code.indexOf('return') > -1) {
         python_code = `${block.name} = _${block.name}_function()`;
-    } else if (map_variables.length > 1) {
+    } else if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0,name.length-1)) // 'a_' => 'a'
-        python_code = `${block.name} = [_${block.name}_function(${map_variables.join(', ')}) for ${map_variables.join(',')} in izip(${zip_variables.join(', ')})]`
-    } else if (map_variables.length == 1) {
-        // python's zip gives you ('a') ('b') ('c') on zip(['a', 'b', 'c']), so have to add [0]
-        var zip_variables = map_variables.map(name => name.slice(0,name.length-1)) // 'a_' => 'a'
-        python_code = `${block.name} = [_${block.name}_function(${map_variables.join(', ')}[0]) for ${map_variables.join(',')} in izip(${zip_variables.join(', ')})]`
+        python_code = `${block.name} = list(starmap(_${block.name}_function, izip(${zip_variables.join(',')})))`
     } else {
         python_code = `${block.name} = ${block.code}`; 
     }
 
-    // console.log('running python: ', python_code)
+    console.log('running python: ', python_code)
     var no_op = function() {};
     var success = function(data: string) {
         block.error = '';
