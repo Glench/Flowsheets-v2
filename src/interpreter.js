@@ -203,7 +203,7 @@ function python_declare(block: Block) {
         return
     }
 
-    console.log('declaring python: ', python_function_declaration)
+    // console.log('declaring python: ', python_function_declaration)
     var no_op = function() {};
     var success = function(data: string) {
         block.error = '';
@@ -244,6 +244,7 @@ function python_run(block: Block) {
         python_code = `${block.name} = ${block.code}`; 
     }
 
+    // console.log('running python: ', python_code)
     var no_op = function() {};
     var success = function(data: string) {
         block.error = '';
@@ -280,6 +281,7 @@ function get_python_value(block: Block) {
         block.error = `error in evaling Block ${block.name}! ${data}`;
         ui.render_error(block);
     });
+    // console.log('getting python value:', block.name)
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
 }
 
