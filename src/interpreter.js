@@ -235,7 +235,8 @@ function python_run(block: Block) {
         python_code = `${block.name} = _${block.name}_function()`;
     } else if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0,name.length-1)) // 'a_' => 'a'
-        python_code = `${block.name} = map(_${block.name}_function, ${zip_variables.join(', ')})`
+        // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
+        python_code = `${block.name} = list(starmap(_${block.name}_function, izip(${zip_variables.join(',')})))`
     } else {
         python_code = `${block.name} = ${block.code}`; 
     }
@@ -368,7 +369,7 @@ function change_code(block: Block, code: string) {
     }
 
     block.depends_on = blocks.filter(function(test_block: Block) {
-        return _.contains(names, test_block.name);
+        return _.contains(names, test_block.name) || _.contains(names, test_block.name+'_');
     });
 
     python_declare(block)

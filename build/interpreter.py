@@ -1,8 +1,9 @@
 import sys
 import json
+from itertools import izip, starmap
 from datetime import datetime
 
-user_globals = {'json': json}
+user_globals = {'json': json, 'izip': izip, 'starmap': starmap}
 
 with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
 
@@ -52,6 +53,6 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
                 sys.stderr.flush()
 
             log_file.write(cleaned_payload+'\n')
-            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'json')}
+            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'json', 'izip', 'starmap')}
             log_file.write('current globals: {}\n'.format(log_globals))
             log_file.flush()
