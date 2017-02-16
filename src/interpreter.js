@@ -292,6 +292,10 @@ function replace_python_names(old_code: string, to_replace: string, replace_with
     var token = advance_token();
     while (token.type.type !== 'eof') {
         if (token.value === to_replace) {
+            new_code.push(replace_with)
+            new_code.push('')
+        } else if (token.value === (to_replace+'_')) {
+            new_code.push(replace_with+'_')
             new_code.push('')
         } else {
             if (!token.value) {
@@ -314,7 +318,7 @@ function replace_python_names(old_code: string, to_replace: string, replace_with
         }
         token = advance_token();
     }
-    return new_code.join(replace_with);
+    return new_code.join('');
 }
 
 function change_name(block: Block, name: string):string {
@@ -330,7 +334,8 @@ function change_name(block: Block, name: string):string {
         }
     })
 
-    if (block.code.indexOf('return') > -1) {
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length-1] == '_'))
+    if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
         var old_function_name = `_${old_name}_function`;
         var new_function_name = `_${block.name}_function`;
         var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name}`;
