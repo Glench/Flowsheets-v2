@@ -213,7 +213,7 @@ function python_run(block) {
         python_code = `${block.name} = _${block.name}_function()`;
     } else if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
-        python_code = `${block.name} = list(starmap(_${block.name}_function, izip(${zip_variables.join(',')})))`;
+        python_code = `${block.name} = map(_${block.name}_function, ${zip_variables.join(', ')})`;
     } else {
         python_code = `${block.name} = ${block.code}`;
     }
