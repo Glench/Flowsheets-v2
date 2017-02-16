@@ -13,14 +13,14 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
         # if input is being sent in too fast then readlines takes incoming pieces instead of
         # separating by new line.
 
-        accumulating_payload = ''
+        accumulating_payload = [] 
         next_character = sys.stdin.read(1)
         # Data format is one line per command, with newlines within a command displayed as __NEWLINE__
         while next_character != '\n':
-            accumulating_payload += next_character # @Speed? Is appending characters to strings too slow?
+            accumulating_payload.append(next_character)
             next_character = sys.stdin.read(1) # Note: I believe the program execution is paused while waiting for the next character.
 
-        payload = accumulating_payload
+        payload = ''.join(accumulating_payload)
         # payload = '__EXEC:a = 1'
         # payload = '__EVAL:json.dumps(a)'
 

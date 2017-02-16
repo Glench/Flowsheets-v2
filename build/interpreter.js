@@ -215,12 +215,12 @@ function python_run(block) {
         var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
         python_code = `${block.name} = [_${block.name}_function(${map_variables.join(', ')}) for ${map_variables.join(',')} in izip(${zip_variables.join(', ')})]`;
     } else if (map_variables.length == 1) {
+        // python's zip gives you ('a') ('b') ('c') on zip(['a', 'b', 'c']), so have to add [0]
         var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
         python_code = `${block.name} = [_${block.name}_function(${map_variables.join(', ')}[0]) for ${map_variables.join(',')} in izip(${zip_variables.join(', ')})]`;
     } else {
         python_code = `${block.name} = ${block.code}`;
     }
-    console.log('running python: ', python_code);
 
     var no_op = function () {};
     var success = function (data) {
@@ -343,7 +343,7 @@ function change_code(block, code) {
     // @Cleanup: detect cyclical dependencies more formally, not just self reference
     if (_.contains(names, block.name)) {
         block.error = "Can't refer to self with name \"" + block.name + "\"";
-        ui.render_output(block);
+        ui.render_error(block);
         return;
     }
 

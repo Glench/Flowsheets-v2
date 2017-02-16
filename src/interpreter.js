@@ -365,7 +365,7 @@ function change_code(block: Block, code: string) {
     // @Cleanup: detect cyclical dependencies more formally, not just self reference
     if (_.contains(names, block.name)) {
         block.error = "Can't refer to self with name \""+ block.name +"\"";
-        ui.render_output(block);
+        ui.render_error(block);
         return
     }
 
