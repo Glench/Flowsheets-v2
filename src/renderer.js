@@ -37,7 +37,7 @@ function initialize_grid() {
         for (var column = 0; column < columns; ++column) {
             var onClick = function(row,column) {
                 return function(evt) {
-                    var block = interpreter.create_block(null, 'a+1');
+                    var block = interpreter.create_block(null, "'hi'");
                     block.depends_on = [interpreter.blocks[0]];
                     create_and_render_block(block, row, column);
                 }
@@ -89,6 +89,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
         evt.stopPropagation();
     })
     $('#main tr').eq(row+1).find('td').eq(column).html($code)
+    $code.focus().select();
 
 
     var $output = $('<input>').attr('id', 'output-'+block.name).attr('value', block.output).on('click', function(evt) {

@@ -240,7 +240,7 @@ function python_run(block: Block) {
         python_code = `${block.name} = ${block.code}`; 
     }
 
-    console.log('running python: ', python_code)
+    // console.log('running python: ', python_code)
     var no_op = function() {};
     var success = function(data: string) {
         block.error = '';
@@ -361,7 +361,7 @@ function change_code(block: Block, code: string) {
     }
 
     // @Cleanup: detect cyclical dependencies more formally, not just self reference
-    if (_.contains(names, block.name)) {
+    if (_.contains(names, block.name) || _.contains(names, block.name+'_')) {
         block.error = "Can't refer to self with name \""+ block.name +"\"";
         ui.render_error(block);
         return
