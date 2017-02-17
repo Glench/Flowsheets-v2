@@ -181,7 +181,7 @@ function python_exec(python_code: string) {
 
 function python_declare(block: Block) {
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length-1] == '_'))
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'))
 
     var python_function_declaration: string;
     var python_function_name = `_${block.name}_function`;
@@ -230,7 +230,7 @@ function python_run(block: Block) {
     var python_code: string;
 
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length-1] == '_'));
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
     if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0,name.length-1)) // 'a_' => 'a'
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
@@ -335,7 +335,7 @@ function change_name(block: Block, name: string):string {
         }
     })
 
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length-1] == '_'))
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'))
     if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
         var old_function_name = `_${old_name}_function`;
         var new_function_name = `_${block.name}_function`;
