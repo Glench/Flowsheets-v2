@@ -29,7 +29,7 @@ function initialize_grid() {
         for (var column = 0; column < columns; ++column) {
             var onClick = function (row, column) {
                 return function (evt) {
-                    var block = interpreter.create_block(null, "'hi'");
+                    var block = interpreter.create_block(null, _.last(ui_blocks).block.name);
                     block.depends_on = [interpreter.blocks[0]];
                     create_and_render_block(block, row, column);
                 };
@@ -109,7 +109,11 @@ module.exports.render_error = render_error;
 
 function render_output(block) {
     var $output = $('#output-' + block.name);
-    $output.val(block.output);
+    if (block.output !== null) {
+        $output.val(block.output.toString());
+    } else {
+        $output.val('None');
+    }
     fade_background_color($output, 1, 'rgba(255,255,0, ');
 };
 module.exports.render_output = render_output;

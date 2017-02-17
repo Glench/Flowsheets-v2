@@ -285,8 +285,9 @@ function get_python_value(block: Block) {
 function replace_python_names(old_code: string, to_replace: string, replace_with: string): string {
     // replace `to_replace` with `replace_with` in `old_code`
 
-    // 'a+1' => ['','+1']
-    // '1+a+1' => ['1+','+1']
+    // 'a+1' => ['b','+1']
+    // '1+a+1' => ['1+', 'b', '+1']
+    // 'a_+1' => ['b_','+1']
     var advance_token = filbert.tokenize(old_code)
     var new_code = [''];
     var token = advance_token();
