@@ -204,7 +204,7 @@ function create_block(name: ?string, code: string) {
 
     python_declare(block);
 
-    update_other_blocks_because_this_one_changed(block);
+    update_blocks_because_this_one_changed(block);
 
     return block;
 }
@@ -368,8 +368,6 @@ module.exports.change_name = change_name;
 function change_code(block: Block, code: string) {
     block.code = code;
 
-    // update dependencies
-
     try {
         var names = get_user_identifiers(block.code);
     } catch(e) {
@@ -392,11 +390,11 @@ function change_code(block: Block, code: string) {
 
     python_declare(block)
 
-    update_other_blocks_because_this_one_changed(block);
+    update_blocks_because_this_one_changed(block);
 }
 module.exports.change_code = change_code;
 
-function update_other_blocks_because_this_one_changed(updatedBlock: Block):void {
+function update_blocks_because_this_one_changed(updatedBlock: Block):void {
     // if a block's value changes, update it and go update all the other blocks that depend on that block
     var updated_blocks: Block[] = [updatedBlock];
     while (updated_blocks.length) {
@@ -410,4 +408,4 @@ function update_other_blocks_because_this_one_changed(updatedBlock: Block):void 
         }) 
     }
 }
-module.exports.update_other_blocks_because_this_one_changed = update_other_blocks_because_this_one_changed;
+module.exports.update_blocks_because_this_one_changed = update_blocks_because_this_one_changed;
