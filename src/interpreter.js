@@ -347,7 +347,7 @@ function change_name(block: Block, name: string):string {
     var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
     success_queue.push(callback);
     fail_queue.push(callback)
-    python_interpreter.stdin.write(`__EXEC:${python_code}\n`)
+    python_exec(python_code)
 
     return block.name;
 }
