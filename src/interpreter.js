@@ -341,7 +341,7 @@ function change_name(block: Block, name: string):string {
     // Update references to this block in other blocks' code
     // Anything that depends on `block` should have its code updated
     blocks.forEach(test_block => {
-        if (_.contains(test_block.depends_on, block)) {
+        if (test_block.depends_on.includes(block)) {
             test_block.code = replace_python_names(test_block.code, old_name, block.name)
             ui.render_code(test_block)
         }
@@ -385,7 +385,7 @@ function change_code(block: Block, code: string) {
     }
 
     block.depends_on = blocks.filter(function(test_block: Block) {
-        return _.contains(names, test_block.name) || _.contains(names, test_block.name+'_');
+        return names.includes(test_block.name) || names.includes(test_block.name+'_');
     });
 
     python_declare(block)
