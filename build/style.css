@@ -19,6 +19,12 @@ button#new-import {
   display: inline-block;
   vertical-align: top;
 }
+#blocks {
+  position: relative;
+}
+.block {
+  position: absolute;
+}
 table#main {
   border-collapse: collapse;
 }

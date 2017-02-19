@@ -126,6 +126,11 @@ python_interpreter.stderr.on('readable', () => {
     }
 });
 
+function python_exec(python_code) {
+    assert(success_queue.length !== 0 && fail_queue.length !== 0); // should never have something on the queue without a success and error handler
+    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
+};
+
 var blocks = [];
 module.exports.blocks = blocks;
 
@@ -200,11 +205,6 @@ function python_import(python_code) {
     python_exec(python_code);
 }
 module.exports.python_import = python_import;
-
-function python_exec(python_code) {
-    assert(success_queue.length !== 0 && fail_queue.length !== 0);
-    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
-};
 
 function python_declare(block) {
     // a_ means 'for a_ in a: ...'
@@ -316,13 +316,13 @@ function change_name(block, name) {
     // Update references to this block in other blocks' code
     // Anything that depends on `block` should have its code updated
     blocks.forEach(test_block => {
-        if (_.contains(test_block.depends_on, block)) {
+        if (test_block.depends_on.includes(block)) {
             test_block.code = replace_python_names(test_block.code, old_name, block.name);
             ui.render_code(test_block);
         }
     });
 
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) === '_'));
     if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
         var old_function_name = `_${old_name}_function`;
         var new_function_name = `_${block.name}_function`;
@@ -360,7 +360,7 @@ function change_code(block, code) {
     }
 
     block.depends_on = blocks.filter(function (test_block) {
-        return _.contains(names, test_block.name) || _.contains(names, test_block.name + '_');
+        return names.includes(test_block.name) || names.includes(test_block.name + '_');
     });
 
     python_declare(block);
