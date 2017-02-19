@@ -2,6 +2,12 @@ const spawn = require('child_process').spawn;
 const filbert = require('filbert');
 const _ = require('underscore');
 
+function assert(condition) {
+    if (!condition) {
+        throw 'Assertion failed!';
+    }
+}
+
 const ui = require('./renderer.js');
 
 var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
@@ -23,6 +29,47 @@ function get_user_identifiers(python_expression) {
     });
 }
 
+function replace_python_names(old_code, to_replace, replace_with) {
+    // replace `to_replace` with `replace_with` in `old_code`
+
+    // 'a+1' => ['b','+1']
+    // '1+a+1' => ['1+', 'b', '+1']
+    // 'a_+1' => ['b_','+1']
+    var advance_token = filbert.tokenize(old_code);
+    var new_code = [''];
+    var token = advance_token();
+    while (token.type.type !== 'eof') {
+        if (token.value === to_replace) {
+            new_code.push(replace_with);
+            new_code.push('');
+        } else if (token.value === to_replace + '_') {
+            new_code.push(replace_with + '_');
+            new_code.push('');
+        } else {
+            if (!token.value) {
+                if (token.type.type === 'newline') {
+                    // e.g. token = {value: undefined, type: {type: 'newline'}}
+                    token.value = '\n';
+                } else {
+                    // e.g. token = {value: undefined, type: {type: '['}}
+                    token.value = token.type.type;
+                }
+            } else if (token.type.type === 'string') {
+                // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
+                token.value = `${old_code[token.start]}${token.value}${old_code[token.end - 1]}`;
+            } else if (token.value === 'return' && token.type.keyword === 'return') {
+                // e.g. token = {value: 'return', type: {keyword: 'return'}}
+                token.value = 'return '; // needs to have space on the end
+            }
+
+            new_code[new_code.length - 1] += token.value;
+        }
+        token = advance_token();
+    }
+    return new_code.join('');
+}
+
+// get stdout character-by-character until newline
 var stdout_accumulation = [];
 python_interpreter.stdout.setEncoding('utf8');
 python_interpreter.stdout.on('readable', () => {
@@ -79,11 +126,11 @@ python_interpreter.stderr.on('readable', () => {
     }
 });
 
-// The state!
 var blocks = [];
 module.exports.blocks = blocks;
 
 function generate_unique_name() {
+    // 'a', 'b', 'c', ...
     var existing_names = blocks.map(block => block.name);
     var alpha_index = 'a';
     var current_test_name = alpha_index;
@@ -94,6 +141,7 @@ function generate_unique_name() {
     return current_test_name;
 }
 function generate_unique_name_from_name(test_name) {
+    // 'usernames' => 'usernames_1' => 'usernames_2'
     var existing_names = blocks.map(block => block.name);
     var number_index = 0;
     var current_test_name = test_name;
@@ -154,12 +202,13 @@ function python_import(python_code) {
 module.exports.python_import = python_import;
 
 function python_exec(python_code) {
+    assert(success_queue.length !== 0 && fail_queue.length !== 0);
     python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
 };
 
 function python_declare(block) {
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length - 1] == '_'));
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
 
     var python_function_declaration;
     var python_function_name = `_${block.name}_function`;
@@ -208,7 +257,7 @@ function python_run(block) {
     var python_code;
 
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length - 1] == '_'));
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
     if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
@@ -260,46 +309,6 @@ function get_python_value(block) {
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`);
 }
 
-function replace_python_names(old_code, to_replace, replace_with) {
-    // replace `to_replace` with `replace_with` in `old_code`
-
-    // 'a+1' => ['b','+1']
-    // '1+a+1' => ['1+', 'b', '+1']
-    // 'a_+1' => ['b_','+1']
-    var advance_token = filbert.tokenize(old_code);
-    var new_code = [''];
-    var token = advance_token();
-    while (token.type.type !== 'eof') {
-        if (token.value === to_replace) {
-            new_code.push(replace_with);
-            new_code.push('');
-        } else if (token.value === to_replace + '_') {
-            new_code.push(replace_with + '_');
-            new_code.push('');
-        } else {
-            if (!token.value) {
-                if (token.type.type === 'newline') {
-                    // e.g. token = {value: undefined, type: {type: 'newline'}}
-                    token.value = '\n';
-                } else {
-                    // e.g. token = {value: undefined, type: {type: '['}}
-                    token.value = token.type.type;
-                }
-            } else if (token.type.type === 'string') {
-                // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
-                token.value = `${old_code[token.start]}${token.value}${old_code[token.end - 1]}`;
-            } else if (token.value === 'return' && token.type.keyword === 'return') {
-                // e.g. token = {value: 'return', type: {keyword: 'return'}}
-                token.value = 'return '; // needs to have space on the end
-            }
-
-            new_code[new_code.length - 1] += token.value;
-        }
-        token = advance_token();
-    }
-    return new_code.join('');
-}
-
 function change_name(block, name) {
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
@@ -313,7 +322,7 @@ function change_name(block, name) {
         }
     });
 
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => name[name.length - 1] == '_'));
+    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
     if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
         var old_function_name = `_${old_name}_function`;
         var new_function_name = `_${block.name}_function`;
@@ -325,7 +334,7 @@ function change_name(block, name) {
     var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
     success_queue.push(callback);
     fail_queue.push(callback);
-    python_interpreter.stdin.write(`__EXEC:${python_code}\n`);
+    python_exec(python_code);
 
     return block.name;
 }

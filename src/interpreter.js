@@ -3,10 +3,18 @@ const spawn = require('child_process').spawn;
 const filbert = require('filbert');
 const _ = require('underscore');
 
+function assert(condition: boolean) {
+    if (!condition) {
+        throw 'Assertion failed!'
+    }
+}
+
 const ui = require('./renderer.js');
+
 
 var python_interpreter = spawn('python', [__dirname+'/interpreter.py']);
 module.exports.python_interpreter = python_interpreter;
+
 
 function get_user_identifiers(python_expression: string) {
     var advance_token = filbert.tokenize(python_expression)
@@ -27,6 +35,47 @@ function get_user_identifiers(python_expression: string) {
 
 }
 
+function replace_python_names(old_code: string, to_replace: string, replace_with: string): string {
+    // replace `to_replace` with `replace_with` in `old_code`
+
+    // 'a+1' => ['b','+1']
+    // '1+a+1' => ['1+', 'b', '+1']
+    // 'a_+1' => ['b_','+1']
+    var advance_token = filbert.tokenize(old_code)
+    var new_code = [''];
+    var token = advance_token();
+    while (token.type.type !== 'eof') {
+        if (token.value === to_replace) {
+            new_code.push(replace_with)
+            new_code.push('')
+        } else if (token.value === (to_replace+'_')) {
+            new_code.push(replace_with+'_')
+            new_code.push('')
+        } else {
+            if (!token.value) {
+                if (token.type.type === 'newline') {
+                    // e.g. token = {value: undefined, type: {type: 'newline'}}
+                    token.value = '\n'
+                } else {
+                    // e.g. token = {value: undefined, type: {type: '['}}
+                    token.value = token.type.type;
+                }
+            } else if (token.type.type === 'string') {
+                // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
+                token.value = `${old_code[token.start]}${token.value}${old_code[token.end-1]}`;
+            } else if (token.value === 'return' && token.type.keyword === 'return') {
+                // e.g. token = {value: 'return', type: {keyword: 'return'}}
+                token.value = 'return ' // needs to have space on the end
+            }
+
+            new_code[new_code.length-1] += token.value;
+        }
+        token = advance_token();
+    }
+    return new_code.join('');
+}
+
+// get stdout character-by-character until newline
 var stdout_accumulation: string[] = [];
 python_interpreter.stdout.setEncoding('utf8')
 python_interpreter.stdout.on('readable', () => {
@@ -85,11 +134,11 @@ python_interpreter.stderr.on('readable', () => {
 });
 
 
-// The state!
 var blocks: Block[] = [];
 module.exports.blocks = blocks;
 
 function generate_unique_name():string {
+    // 'a', 'b', 'c', ...
     var existing_names = blocks.map(block => block.name);
     var alpha_index = 'a';
     var current_test_name = alpha_index;
@@ -101,6 +150,7 @@ function generate_unique_name():string {
 
 }
 function generate_unique_name_from_name(test_name:string):string {
+    // 'usernames' => 'usernames_1' => 'usernames_2'
     var existing_names = blocks.map(block => block.name);
     var number_index = 0;
     var current_test_name = test_name;
@@ -176,6 +226,7 @@ function python_import(python_code: string) {
 module.exports.python_import = python_import;
 
 function python_exec(python_code: string) {
+    assert(success_queue.length !== 0 && fail_queue.length !== 0);
     python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
 };
 
@@ -282,45 +333,6 @@ function get_python_value(block: Block) {
     python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
 }
 
-function replace_python_names(old_code: string, to_replace: string, replace_with: string): string {
-    // replace `to_replace` with `replace_with` in `old_code`
-
-    // 'a+1' => ['b','+1']
-    // '1+a+1' => ['1+', 'b', '+1']
-    // 'a_+1' => ['b_','+1']
-    var advance_token = filbert.tokenize(old_code)
-    var new_code = [''];
-    var token = advance_token();
-    while (token.type.type !== 'eof') {
-        if (token.value === to_replace) {
-            new_code.push(replace_with)
-            new_code.push('')
-        } else if (token.value === (to_replace+'_')) {
-            new_code.push(replace_with+'_')
-            new_code.push('')
-        } else {
-            if (!token.value) {
-                if (token.type.type === 'newline') {
-                    // e.g. token = {value: undefined, type: {type: 'newline'}}
-                    token.value = '\n'
-                } else {
-                    // e.g. token = {value: undefined, type: {type: '['}}
-                    token.value = token.type.type;
-                }
-            } else if (token.type.type === 'string') {
-                // e.g. token = {value: 'hi there', type: {type: 'string'}}, it removes the quotes from string literals...
-                token.value = `${old_code[token.start]}${token.value}${old_code[token.end-1]}`;
-            } else if (token.value === 'return' && token.type.keyword === 'return') {
-                // e.g. token = {value: 'return', type: {keyword: 'return'}}
-                token.value = 'return ' // needs to have space on the end
-            }
-
-            new_code[new_code.length-1] += token.value;
-        }
-        token = advance_token();
-    }
-    return new_code.join('');
-}
 
 function change_name(block: Block, name: string):string {
     var old_name = block.name;
