@@ -27,12 +27,13 @@ button#new-import {
   font-weight: bold;
   font-size: 14px;
   text-align: center;
-  background-color: #000;
+  background-color: #000 !important;
   color: white;
 }
 .block .name,
 .block .code,
 .block .output {
+  background-color: white;
   height: 19px;
   overflow: scroll;
 }

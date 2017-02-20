@@ -159,7 +159,7 @@ function generate_unique_name_from_name(test_name:string):string {
     // 'usernames' => 'usernames_1' => 'usernames_2'
     var existing_names = blocks.map(block => block.name);
     var number_index = 0;
-    var current_test_name = test_name;
+    var current_test_name = test_name.replace(/\s/g, '_');
     while (existing_names.indexOf(current_test_name) >= 0) {
         number_index += 1;
         current_test_name = test_name + '_' + number_index;

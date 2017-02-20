@@ -284,9 +284,7 @@ function render_output(block: Block) {
         $output.find('input').val('None')
     }
 
-    if (ui_block.should_auto_resize) {
-        resize(ui_block)
-    }
+    resize(ui_block)
 
     fade_background_color($output.find('input'), 1, 'rgba(255,255,0, ')
 };
