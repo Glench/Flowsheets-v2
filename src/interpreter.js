@@ -183,7 +183,7 @@ class Block {
     name: string;
     depends_on: Block[];
     code: string;
-    output: JSONType;
+    output: any; //JSONType;
     error: ?string;
 
     constructor() {

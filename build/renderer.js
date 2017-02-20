@@ -1,13 +1,13 @@
 const $ = require('jquery');
 const _ = require('underscore');
 
-function clamp(number, min, max) {
-    if (number < min) {
+function clamp(num, min, max) {
+    if (num < min) {
         return min;
-    } else if (number > max) {
+    } else if (num > max) {
         return max;
     }
-    return number;
+    return num;
 }
 
 const interpreter = require('./interpreter');
@@ -22,12 +22,14 @@ const cell_width = 88; // including borders
 const cell_height = 19; // including borders
 
 class UIBlock {
-
+    // in # of rows
     constructor() {
         this.name_height = 1;
         this.code_height = 1;
         this.output_height = 1;
-    }
+    } // in # of rows
+
+    // in # of rows
 };
 module.exports.UIBlock = UIBlock;
 
@@ -171,6 +173,7 @@ function resize(ui_block) {
     var $block = $('#block-' + ui_block.block.name);
     $block.css('height', cell_height * (ui_block.name_height + ui_block.code_height + ui_block.output_height));
 
+    $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
     $block.find('.output').css('height', cell_height * ui_block.output_height);
 }
 
@@ -178,22 +181,40 @@ function render_output(block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
     var $block = $('#block-' + block.name);
-    var $output = $block.find('.output input');
-    $output.val(block.output);
+    var $output = $block.find('.output');
+
     if (_.isArray(block.output) || _.isObject(block.output)) {
         ui_block.output_height = clamp(_.size(block.output), 1, 20);
-        $output.val(block.output);
+        var i = 0;
+        _.each(block.output, function (item, index) {
+            if (i > ui_block.output_height) {
+                return;
+            }
+
+            var $input = $output.find('input').eq(i);
+            if ($input.length === 0) {
+                $input = $('<input>');
+                $output.append($input);
+            }
+
+            if (_.isArray(block.output)) {
+                $input.val(block.output[index]);
+            } else {
+                $input.val('' + index + ': ' + block.output[index]);
+            }
+            i += 1;
+        });
     } else if (block.output !== null) {
         ui_block.output_height = 1;
-        $output.val(block.output.toString());
+        $output.find('input').val(block.output.toString());
     } else {
         ui_block.output_height = 1;
-        $output.val('None');
+        $output.find('input').val('None');
     }
 
     resize(ui_block);
 
-    fade_background_color($output, 1, 'rgba(255,255,0, ');
+    fade_background_color($output.find('input'), 1, 'rgba(255,255,0, ');
 };
 module.exports.render_output = render_output;
 

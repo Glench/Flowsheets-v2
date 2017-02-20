@@ -38,7 +38,7 @@ button#new-import {
 .block .name input,
 .block .code input,
 .block .output input {
-  height: 16px;
+  height: 17px;
   display: block;
   width: 100%;
   width: 82px;
@@ -46,11 +46,13 @@ button#new-import {
   padding: 0 3px 2px 3px;
 }
 .block .code {
-  border-bottom: 1px solid #ccc;
   height: 18px;
 }
 .block .code input {
   font-family: "Menlo", "Andale Mono", monospace;
+}
+.block .output {
+  border-top: 1px solid #999;
 }
 table#main {
   border-collapse: collapse;

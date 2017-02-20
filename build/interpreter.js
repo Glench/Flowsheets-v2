@@ -168,7 +168,8 @@ class Block {
 
     constructor() {
         this.depends_on = [];
-    }
+    } //JSONType;
+
 
     toString() {
         return `Block ${this.name}`;

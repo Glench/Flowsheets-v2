@@ -28,9 +28,9 @@ class UIBlock {
     row: number;
     column: number;
 
-    name_height: number;
-    code_height: number;
-    output_height: number;
+    name_height: number; // in # of rows
+    code_height: number; // in # of rows
+    output_height: number; // in # of rows
 
     block: Block;
 
@@ -187,6 +187,7 @@ function resize(ui_block: UIBlock) {
     var $block = $('#block-'+ui_block.block.name)
     $block.css('height', cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height))
 
+    $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
     $block.find('.output').css('height', cell_height*ui_block.output_height);
 }
 
@@ -194,22 +195,38 @@ function render_output(block: Block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
     var $block = $('#block-'+block.name)
-    var $output = $block.find('.output input')
-    $output.val(block.output)
+    var $output = $block.find('.output')
+
     if (_.isArray(block.output) || _.isObject(block.output)) {
         ui_block.output_height = clamp(_.size(block.output), 1, 20);
-        $output.val(block.output);
+        var i = 0;
+        _.each(block.output, function(item, index) {
+            if (i > ui_block.output_height) { return; }
+
+            var $input = $output.find('input').eq(i)
+            if ($input.length === 0) {
+                $input = $('<input>')
+                $output.append($input)
+            }
+
+            if (_.isArray(block.output)) {
+                $input.val(block.output[index])
+            } else {
+                $input.val(''+index+': '+block.output[index])
+            }
+            i += 1;
+        })
     } else if (block.output !== null) {
         ui_block.output_height = 1;
-        $output.val(block.output.toString());
+        $output.find('input').val(block.output.toString());
     } else {
         ui_block.output_height = 1;
-        $output.val('None')
+        $output.find('input').val('None')
     }
 
     resize(ui_block)
 
-    fade_background_color($output, 1, 'rgba(255,255,0, ')
+    fade_background_color($output.find('input'), 1, 'rgba(255,255,0, ')
 };
 module.exports.render_output = render_output;
 
