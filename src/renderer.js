@@ -3,6 +3,15 @@
 const $ = require('jquery');
 const _ = require('underscore');
 
+function clamp(num: number, min: number, max: number):number {
+    if (num < min) {
+        return min
+    } else if (num > max) {
+        return max
+    }
+    return num;
+}
+
 const interpreter = require('./interpreter')
 const Block = interpreter.Block;
 
@@ -19,7 +28,17 @@ class UIBlock {
     row: number;
     column: number;
 
+    name_height: number;
+    code_height: number;
+    output_height: number;
+
     block: Block;
+
+    constructor() {
+        this.name_height = 1;
+        this.code_height = 1;
+        this.output_height = 1;
+    }
 };
 module.exports.UIBlock = UIBlock;
 
@@ -143,6 +162,9 @@ function create_and_render_block(block: Block, row: number, column: number) {
 };
 module.exports.create_and_render_block = create_and_render_block;
 
+function resize(ui_block: UIBlock) {
+}
+
 function render_code(block: Block) {
     var $code_input = $('#block-'+block.name).find('.code input');
     $code_input.val(block.code);
@@ -161,13 +183,32 @@ function render_error(block: Block) {
 }
 module.exports.render_error = render_error;
 
+function resize(ui_block: UIBlock) {
+    var $block = $('#block-'+ui_block.block.name)
+    $block.css('height', cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height))
+
+    $block.find('.output').css('height', cell_height*ui_block.output_height);
+}
+
 function render_output(block: Block) {
-    var $output = $('#block-'+block.name).find('.output input')
-    if (block.output !== null) {
+    var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
+
+    var $block = $('#block-'+block.name)
+    var $output = $block.find('.output input')
+    $output.val(block.output)
+    if (_.isArray(block.output) || _.isObject(block.output)) {
+        ui_block.output_height = clamp(_.size(block.output), 1, 20);
+        $output.val(block.output);
+    } else if (block.output !== null) {
+        ui_block.output_height = 1;
         $output.val(block.output.toString());
     } else {
+        ui_block.output_height = 1;
         $output.val('None')
     }
+
+    resize(ui_block)
+
     fade_background_color($output, 1, 'rgba(255,255,0, ')
 };
 module.exports.render_output = render_output;

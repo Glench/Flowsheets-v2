@@ -50,7 +50,6 @@ button#new-import {
   height: 18px;
 }
 .block .code input {
-  height: 18px;
   font-family: "Menlo", "Andale Mono", monospace;
 }
 table#main {
