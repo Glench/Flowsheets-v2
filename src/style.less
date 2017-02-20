@@ -38,18 +38,18 @@ button#new-import {
 
     .name, .code, .output {
         height: @cell_height;
+        overflow: scroll;
 
         input {
             height: @cell_height - 2px;
 
             display: block;
             width: 100%;
-            width: @cell_width - 6px;
+            // width: @cell_width - 6px;
             border: 0;
             padding: 0 3px 2px 3px;
         }
     }
-
 
     .code {
         // border-bottom: 1px solid #999;
@@ -61,26 +61,16 @@ button#new-import {
     .output {
         border-top: 1px solid #999;
     }
-}
 
-table#main {
-    border-collapse: collapse;
-    
-    td {
-        min-width: 86px;
-        border: 1px solid #ddd;
-        border-spacing: 0;
-        padding: 8px 0;
-    }
+    .resize-handle {
+        @size: 8px;
+        // background-color: red;
 
-    [id^="code-"] {
-        font-family: "Menlo", "Andale Mono", monospace;
-        width: 125px;
-    }
-
-    [id^="output-"] {
-        font-size: 13px;
-        width: 125px;
-        background-color: rgba(255,255,0,1);
+        width: @size;
+        height: @size;
+        position: absolute;
+        bottom: @size/-3;
+        right: @size/-3;
+        cursor: nwse-resize;
     }
 }

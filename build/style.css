@@ -34,6 +34,7 @@ button#new-import {
 .block .code,
 .block .output {
   height: 19px;
+  overflow: scroll;
 }
 .block .name input,
 .block .code input,
@@ -41,7 +42,6 @@ button#new-import {
   height: 17px;
   display: block;
   width: 100%;
-  width: 82px;
   border: 0;
   padding: 0 3px 2px 3px;
 }
@@ -54,21 +54,11 @@ button#new-import {
 .block .output {
   border-top: 1px solid #999;
 }
-table#main {
-  border-collapse: collapse;
-}
-table#main td {
-  min-width: 86px;
-  border: 1px solid #ddd;
-  border-spacing: 0;
-  padding: 8px 0;
-}
-table#main [id^="code-"] {
-  font-family: "Menlo", "Andale Mono", monospace;
-  width: 125px;
-}
-table#main [id^="output-"] {
-  font-size: 13px;
-  width: 125px;
-  background-color: #ffff00;
+.block .resize-handle {
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  bottom: -2.66666667px;
+  right: -2.66666667px;
+  cursor: nwse-resize;
 }

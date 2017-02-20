@@ -3,6 +3,7 @@ const spawn = require('child_process').spawn;
 const filbert = require('filbert');
 const _ = require('underscore');
 
+// @Cleanup: probably move to utils at some point
 function assert(condition: boolean) {
     if (!condition) {
         throw 'Assertion failed!'

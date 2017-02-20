@@ -1,6 +1,7 @@
 const $ = require('jquery');
 const _ = require('underscore');
 
+// @Cleanup: probably move to utils at some point
 function clamp(num, min, max) {
     if (num < min) {
         return min;
@@ -21,9 +22,16 @@ const columns = 30;
 const cell_width = 88; // including borders
 const cell_height = 19; // including borders
 
+class Resize_Drag {}
+
+var drag_start = null;
+
 class UIBlock {
     // in # of rows
     constructor() {
+        this.should_auto_resize = true;
+        this.width_in_columns = 1;
+
         this.name_height = 1;
         this.code_height = 1;
         this.output_height = 1;
@@ -85,6 +93,31 @@ function initialize_grid() {
         block.depends_on = [last_block];
         create_and_render_block(block, row, column);
     });
+
+    $('body').on('mouseup', reset_dragging);
+
+    $('body').on('mousemove', function (evt) {
+        if (drag_start) {
+            drag_start.ui_block.should_auto_resize = false;
+
+            var dx = evt.pageX - drag_start.x;
+            var dy = evt.pageY - drag_start.y;
+
+            var new_columns = Math.floor(dx / cell_width);
+            if (dx % cell_width > cell_width / 3) {
+                new_columns = Math.ceil(dx / cell_width);
+            }
+            drag_start.ui_block.width_in_columns = clamp(drag_start.original_width_in_columns + new_columns, 1, columns);
+
+            var new_rows = Math.floor(dy / cell_height);
+            if (dy % cell_height > cell_height / 3) {
+                new_rows = Math.ceil(dy / cell_height);
+            }
+            drag_start.ui_block.output_height = clamp(drag_start.original_output_height + new_rows, 1, rows);
+
+            resize(drag_start.ui_block);
+        }
+    });
 }
 
 function create_and_render_import() {
@@ -94,6 +127,12 @@ function create_and_render_import() {
     });
     $('#imports').append($input);
     $input.focus();
+}
+
+function reset_dragging(evt) {
+    evt.preventDefault();
+    $('#main').css('cursor', 'inherit');
+    drag_start = null;
 }
 
 function create_and_render_block(block, row, column) {
@@ -137,19 +176,31 @@ function create_and_render_block(block, row, column) {
     $code.find('input').focus().select();
 
     // output
-
-
     var $output = $('<div class="output">');
     $output.append($('<input>').attr('value', block.output).on('click', function (evt) {
         evt.stopPropagation();
     }));
     $block.append($output);
 
+    // resize handle
+    var $resize = $('<div class="resize-handle">');
+    $resize.on('mousedown', function (evt) {
+        evt.preventDefault();
+
+        drag_start = new Resize_Drag();
+        drag_start.x = evt.pageX;
+        drag_start.y = evt.pageY;
+        drag_start.ui_block = ui_block;
+        drag_start.original_width_in_columns = ui_block.width_in_columns;
+        drag_start.original_output_height = ui_block.output_height;
+
+        $('#main').css('cursor', 'nwse-resize');
+    }).on('mouseup', reset_dragging);
+    $block.append($resize);
+
     $('#blocks').append($block);
 };
 module.exports.create_and_render_block = create_and_render_block;
-
-function resize(ui_block) {}
 
 function render_code(block) {
     var $code_input = $('#block-' + block.name).find('.code input');
@@ -171,6 +222,8 @@ module.exports.render_error = render_error;
 
 function resize(ui_block) {
     var $block = $('#block-' + ui_block.block.name);
+
+    $block.css('width', ui_block.width_in_columns * cell_width);
     $block.css('height', cell_height * (ui_block.name_height + ui_block.code_height + ui_block.output_height));
 
     $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
@@ -212,7 +265,9 @@ function render_output(block) {
         $output.find('input').val('None');
     }
 
-    resize(ui_block);
+    if (ui_block.should_auto_resize) {
+        resize(ui_block);
+    }
 
     fade_background_color($output.find('input'), 1, 'rgba(255,255,0, ');
 };
