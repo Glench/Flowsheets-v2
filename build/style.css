@@ -4,9 +4,6 @@ body {
   padding: 0;
   line-height: 1;
 }
-h1 {
-  color: #f00;
-}
 body {
   font: 14px/1 "Courier", monospace;
   color: black;
@@ -24,6 +21,37 @@ button#new-import {
 }
 .block {
   position: absolute;
+  outline: 1px solid #999;
+}
+.block .name input {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  background-color: #000;
+  color: white;
+}
+.block .name,
+.block .code,
+.block .output {
+  height: 19px;
+}
+.block .name input,
+.block .code input,
+.block .output input {
+  height: 16px;
+  display: block;
+  width: 100%;
+  width: 82px;
+  border: 0;
+  padding: 0 3px 2px 3px;
+}
+.block .code {
+  border-bottom: 1px solid #ccc;
+  height: 18px;
+}
+.block .code input {
+  height: 18px;
+  font-family: "Menlo", "Andale Mono", monospace;
 }
 table#main {
   border-collapse: collapse;
@@ -33,15 +61,6 @@ table#main td {
   border: 1px solid #ddd;
   border-spacing: 0;
   padding: 8px 0;
-}
-table#main [id^="name-"] {
-  text-align: center;
-  background-color: #000;
-  color: white;
-  font: bold 15px/1.3 "Helvetica Nueue", sans-serif;
-  width: 126px;
-  border: 1px solid #eee;
-  padding: 2px 2px;
 }
 table#main [id^="code-"] {
   font-family: "Menlo", "Andale Mono", monospace;

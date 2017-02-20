@@ -1,4 +1,5 @@
-@base: #f00;
+@cell_width: 88px; // including borders
+@cell_height: 19px; // including borders
 
 html, body {
     margin: 0;
@@ -6,9 +7,6 @@ html, body {
     line-height: 1;
 }
 
-h1 {
-    color: @base;
-}
 body {
     font: 14px/1 "Courier", monospace;
     color: black;
@@ -28,6 +26,39 @@ button#new-import {
 }
 .block {
     position: absolute;
+    outline: 1px solid #999;
+
+    .name input {
+        font-weight: bold;
+        font-size: 14px;
+        text-align: center;
+        background-color: #000;
+        color: white;
+    }
+
+    .name, .code, .output {
+        height: @cell_height;
+
+        input {
+            height: @cell_height - 3px;
+
+            display: block;
+            width: 100%;
+            width: @cell_width - 6px;
+            border: 0;
+            padding: 0 3px 2px 3px;
+        }
+    }
+
+
+    .code {
+        border-bottom: 1px solid #ccc;
+        height: @cell_height - 1px;
+        input {
+            // height: @cell_height - 1;
+            font-family: "Menlo", "Andale Mono", monospace;
+        }
+    }
 }
 
 table#main {
@@ -38,19 +69,6 @@ table#main {
         border: 1px solid #ddd;
         border-spacing: 0;
         padding: 8px 0;
-    }
-
-    [id^="name-"] {
-        @padding-x: 2px;
-        @border-x: 1px;
-
-        text-align: center;
-        background-color: #000;
-        color: white;
-        font: bold 15px/1.3 "Helvetica Nueue", sans-serif;
-        width: 132px - 2*@padding-x - 2*@border-x;
-        border: @border-x solid #eee;
-        padding: 2px @padding-x; 
     }
 
     [id^="code-"] {
