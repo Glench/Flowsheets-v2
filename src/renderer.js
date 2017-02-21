@@ -26,12 +26,16 @@ const cell_width = 88; // including borders
 const cell_height = 19; // including borders
 
 class Move_Drag {
-    x: number;
-    y: number;
+    start_x: number;
+    start_y: number;
 
     ui_block: UIBlock;
-    original_row: number;
-    original_column: number;
+
+    is_dragging(x:number, y:number):boolean {
+        var dx = Math.abs(this.start_x - x);
+        var dy = Math.abs(this.start_y - y);
+        return Math.max(dx, dy) > 3;
+    }
 }
 
 class Resize_Drag {
@@ -42,7 +46,8 @@ class Resize_Drag {
     original_output_height: number;
 }
 
-var drag_start: ?Resize_Drag = null;
+var resize_drag: ?Resize_Drag = null;
+var move_drag: ?Move_Drag = null;
 
 class UIBlock {
     row: number;
@@ -125,25 +130,38 @@ function initialize_grid() {
     $('body').on('mouseup', reset_dragging);
 
     $('body').on('mousemove', function(evt) {
-        if (drag_start) {
-            drag_start.ui_block.should_auto_resize = false;
+        if (resize_drag) {
+            resize_drag.ui_block.should_auto_resize = false;
 
-            var dx = evt.pageX - drag_start.x;
-            var dy = evt.pageY - drag_start.y;
+            var dx = evt.pageX - resize_drag.x;
+            var dy = evt.pageY - resize_drag.y;
 
             var new_columns = Math.floor(dx/cell_width);
             if (dx % cell_width > cell_width/3) {
                 new_columns = Math.ceil(dx/cell_width);
             }
-            drag_start.ui_block.width_in_columns = clamp(drag_start.original_width_in_columns + new_columns, 1, columns);
+            resize_drag.ui_block.width_in_columns = clamp(resize_drag.original_width_in_columns + new_columns, 1, columns);
 
             var new_rows = Math.floor(dy/cell_height);
             if (dy % cell_height > cell_height/3) {
                 new_rows = Math.ceil(dy/cell_height);
             }
-            drag_start.ui_block.output_height = clamp(drag_start.original_output_height + new_rows, 1, rows);
+            resize_drag.ui_block.output_height = clamp(resize_drag.original_output_height + new_rows, 1, rows);
 
-            resize(drag_start.ui_block)
+            resize(resize_drag.ui_block)
+        } else if (move_drag) {
+            if (move_drag.is_dragging(evt.pageX, evt.pageY)) {
+                var grid = document.querySelector('#main');
+                if (!grid) { return; } // extraneous code for @flow
+                var x_wrt_grid = evt.pageX - grid.clientLeft + 1;
+                var y_wrt_grid = evt.pageY - grid.clientTop + 1;
+
+                // @Cleanup
+                move_drag.ui_block.row = Math.floor(y_wrt_grid / cell_height);
+                move_drag.ui_block.column = Math.floor(x_wrt_grid / cell_width);
+
+                resize(move_drag.ui_block)
+            }
         }
     });
 }
@@ -160,7 +178,8 @@ function create_and_render_import() {
 function reset_dragging(evt) {
     evt.preventDefault();
     $('#main').css('cursor', 'inherit');
-    drag_start = null;
+    resize_drag = null;
+    move_drag = null;
 }
 
 function create_and_render_block(block: Block, row: number, column: number) {
@@ -191,20 +210,23 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
           $input.parents('.block').attr('id', 'block-'+new_name)
 
-    }).on('click mousedown', function(evt) {
-        evt.stopPropagation();
+    }).on('mousedown', function(evt) {
         evt.preventDefault();
+        move_drag = new Move_Drag();
+        move_drag.ui_block = ui_block;
+        move_drag.start_x = evt.pageX;
+        move_drag.start_y = evt.pageY;
     }).on('dblclick', function(evt) {
         evt.stopPropagation();
         evt.preventDefault();
+        move_drag = null;
 
         // edit name
         var $target = $(evt.target);
         $target.removeAttr('readOnly')
         $target.focus();
         $target.select();
-    })
-    );
+    }) );
     $block.append($name);
 
 
@@ -218,6 +240,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
     $block.append($code);
     $code.find('input').focus().select();
 
+
     // output
     var $output = $('<div class="output">');
     $output.append($('<input>').attr('value', block.output).on('click', function(evt) {
@@ -225,17 +248,18 @@ function create_and_render_block(block: Block, row: number, column: number) {
     }));
     $block.append($output)
 
+
     // resize handle
     var $resize = $('<div class="resize-handle">')
     $resize.on('mousedown', function(evt) {
         evt.preventDefault();
 
-        drag_start = new Resize_Drag();
-        drag_start.x = evt.pageX;
-        drag_start.y = evt.pageY;
-        drag_start.ui_block = ui_block;
-        drag_start.original_width_in_columns = ui_block.width_in_columns;
-        drag_start.original_output_height = ui_block.output_height;
+        resize_drag = new Resize_Drag();
+        resize_drag.x = evt.pageX;
+        resize_drag.y = evt.pageY;
+        resize_drag.ui_block = ui_block;
+        resize_drag.original_width_in_columns = ui_block.width_in_columns;
+        resize_drag.original_output_height = ui_block.output_height;
 
         $('#main').css('cursor', 'nwse-resize');
     }).on('mouseup', reset_dragging);
@@ -266,11 +290,15 @@ module.exports.render_error = render_error;
 function resize(ui_block: UIBlock) {
     var $block = $('#block-'+ui_block.block.name)
 
-    $block.css('width', ui_block.width_in_columns*cell_width);
-    $block.css('height', cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height));
+    $block.css({
+        top: ui_block.row*cell_height + 1,
+        left: ui_block.column*cell_width + 1,
+        width: ui_block.width_in_columns*cell_width-1,
+        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height)-1,
+    })
 
     $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
-    $block.find('.output').css('height', cell_height*ui_block.output_height);
+    $block.find('.output').css('height', cell_height*ui_block.output_height - 1);
 }
 
 function render_output(block: Block) {
