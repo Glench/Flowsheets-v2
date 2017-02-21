@@ -22,6 +22,8 @@ const columns = 30;
 const cell_width = 88; // including borders
 const cell_height = 19; // including borders
 
+class Move_Drag {}
+
 class Resize_Drag {}
 
 var drag_start = null;
@@ -152,16 +154,27 @@ function create_and_render_block(block, row, column) {
 
     // name
     var $name = $('<div class="name">');
-    $name.append($('<input>').attr('value', block.name).on('change', function (evt) {
+    $name.append($('<input>').attr('value', block.name).attr('readOnly', true).on('change', function (evt) {
         var old_name = block.name;
         var new_name = interpreter.change_name(block, evt.target.value);
 
-        $(evt.target).val(new_name); // rewrite in case the name changed because of sanitization
-        $(evt.target).blur();
+        var $input = $(evt.target);
+        $input.val(new_name); // rewrite in case the name changed because of sanitization
+        $input.blur();
+        $input.attr('readOnly', true);
 
-        $(evt.target).parents('.block').attr('id', 'block-' + new_name);
-    }).on('click', function (evt) {
+        $input.parents('.block').attr('id', 'block-' + new_name);
+    }).on('click mousedown', function (evt) {
         evt.stopPropagation();
+        evt.preventDefault();
+    }).on('dblclick', function (evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+
+        var $target = $(evt.target);
+        $target.removeAttr('readOnly');
+        $target.focus();
+        $target.select();
     }));
     $block.append($name);
 
