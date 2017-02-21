@@ -293,11 +293,10 @@ function resize(ui_block: UIBlock) {
     $block.css({
         top: ui_block.row*cell_height + 1,
         left: ui_block.column*cell_width + 1,
-        width: ui_block.width_in_columns*cell_width-1,
-        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height)-1,
+        width: ui_block.width_in_columns*cell_width - 1,
+        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height) - 1,
     })
 
-    $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
     $block.find('.output').css('height', cell_height*ui_block.output_height - 1);
 }
 
@@ -309,6 +308,7 @@ function render_output(block: Block) {
 
     if (_.isArray(block.output) || _.isObject(block.output)) {
         ui_block.output_height = clamp(_.size(block.output), 1, 20);
+        $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
         var i = 0;
         _.each(block.output, function(item, index) {
             if (i > ui_block.output_height) { return; }
