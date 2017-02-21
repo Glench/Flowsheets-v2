@@ -327,7 +327,7 @@ function fade_background_color($element, alpha, color) {
     }
     alpha -= .04;
     if (alpha < 0) {
-        $element.css('background-color', 'inherit');
+        $element.css('background-color', 'transparent');
         return;
     }
     var new_color = color.replace(' ', ` ${alpha})`);
