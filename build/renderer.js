@@ -219,7 +219,6 @@ function create_and_render_block(block, row, column) {
         evt.stopPropagation();
     }));
     $block.append($code);
-    $code.find('input').focus().select();
 
     // output
     var $output = $('<div class="output">');
@@ -245,6 +244,7 @@ function create_and_render_block(block, row, column) {
     $block.append($resize);
 
     $('#blocks').append($block);
+    $code.find('input').focus().select();
 };
 module.exports.create_and_render_block = create_and_render_block;
 

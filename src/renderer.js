@@ -242,7 +242,6 @@ function create_and_render_block(block: Block, row: number, column: number) {
         evt.stopPropagation();
     }))
     $block.append($code);
-    $code.find('input').focus().select();
 
 
     // output
@@ -270,6 +269,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
     $block.append($resize)
 
     $('#blocks').append($block);
+    $code.find('input').focus().select();
 };
 module.exports.create_and_render_block = create_and_render_block;
 
