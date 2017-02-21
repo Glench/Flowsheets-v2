@@ -151,6 +151,11 @@ function generate_unique_name_from_name(test_name) {
     var existing_names = blocks.map(block => block.name);
     var number_index = 0;
     var current_test_name = test_name.replace(/\s/g, '_');
+    if (_.has(filbert.pythonRuntime, current_test_name) || _.has(filbert.pythonRuntime.functions, current_test_name) || _.has(filbert.pythonRuntime.ops, current_test_name)) {
+
+        // e.g. someone tries to name something 'sum' or 'json'
+        current_test_name = '_' + current_test_name;
+    }
     while (existing_names.indexOf(current_test_name) >= 0) {
         number_index += 1;
         current_test_name = test_name + '_' + number_index;
