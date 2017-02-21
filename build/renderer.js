@@ -132,12 +132,12 @@ function initialize_grid() {
                 if (!grid) {
                     return;
                 } // extraneous code for 
-                var x_wrt_grid = evt.pageX - grid.clientLeft + 1;
-                var y_wrt_grid = evt.pageY - grid.clientTop + 1;
+                var x_wrt_grid = evt.pageX - grid.getBoundingClientRect().left + 1;
+                var y_wrt_grid = evt.pageY - grid.getBoundingClientRect().top + 1;
 
                 // @Cleanup
-                move_drag.ui_block.row = Math.floor(y_wrt_grid / cell_height);
-                move_drag.ui_block.column = Math.floor(x_wrt_grid / cell_width);
+                move_drag.ui_block.row = clamp(Math.floor(y_wrt_grid / cell_height), 0, rows);
+                move_drag.ui_block.column = clamp(Math.floor(x_wrt_grid / cell_width), 0, columns);
 
                 resize(move_drag.ui_block);
             }
@@ -156,7 +156,8 @@ function create_and_render_import() {
 
 function reset_dragging(evt) {
     evt.preventDefault();
-    $('#main').css('cursor', 'inherit');
+    $('body').css('cursor', 'inherit');
+    $('input').css('cursor', 'inherit');
     resize_drag = null;
     move_drag = null;
 }
@@ -194,10 +195,13 @@ function create_and_render_block(block, row, column) {
         move_drag.ui_block = ui_block;
         move_drag.start_x = evt.pageX;
         move_drag.start_y = evt.pageY;
+        $('body').css('cursor', 'move');
+        $(evt.target).css('cursor', 'move');
     }).on('dblclick', function (evt) {
         evt.stopPropagation();
         evt.preventDefault();
         move_drag = null;
+        $(evt.target).css('cursor', 'inherit');
 
         // edit name
         var $target = $(evt.target);
@@ -236,7 +240,7 @@ function create_and_render_block(block, row, column) {
         resize_drag.original_width_in_columns = ui_block.width_in_columns;
         resize_drag.original_output_height = ui_block.output_height;
 
-        $('#main').css('cursor', 'nwse-resize');
+        $('body').css('cursor', 'nwse-resize');
     }).on('mouseup', reset_dragging);
     $block.append($resize);
 
