@@ -3,7 +3,25 @@ import json
 from itertools import izip, starmap
 from datetime import datetime
 
-user_globals = {'json': json, 'izip': izip, 'starmap': starmap}
+class FlowsheetsJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return json.dumps(obj)
+        except:
+            d = {}
+            for key in dir(obj):
+                if key.startswith('__'):
+                    continue
+                try:
+                    d[key] = json.dumps(getattr(obj, key, None))
+                except:
+                    d[key] = repr(getattr(obj, key, None))
+            return d
+
+def stringify(obj):
+    return json.dumps(obj, sort_keys=True, cls=FlowsheetsJSONEncoder)
+
+user_globals = {'stringify': stringify, 'izip': izip, 'starmap': starmap}
 
 with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
 
@@ -53,6 +71,6 @@ with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
                 sys.stderr.flush()
 
             log_file.write(cleaned_payload+'\n')
-            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'json', 'izip', 'starmap')}
+            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'stringify', 'izip', 'starmap')}
             log_file.write('current globals: {}\n'.format(log_globals))
             log_file.flush()

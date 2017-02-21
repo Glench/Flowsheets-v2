@@ -338,7 +338,7 @@ function get_python_value(block: Block) {
         ui.render_error(block);
     });
     // console.log('getting python value:', block.name)
-    python_interpreter.stdin.write(`__EVAL:json.dumps(${block.name})\n`)
+    python_interpreter.stdin.write(`__EVAL:stringify(${block.name})\n`)
 }
 
 
