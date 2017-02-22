@@ -1,5 +1,7 @@
 const $ = require('jquery');
 const _ = require('underscore');
+const React = require('react');
+const ReactDOM = require('react-dom');
 
 // @Cleanup: probably move to utils at some point
 function clamp(num, min, max) {
@@ -155,6 +157,9 @@ function create_and_render_import() {
 }
 
 function reset_dragging(evt) {
+    if (!resize_drag && !move_drag) {
+        return;
+    }
     evt.preventDefault();
     $('body').css('cursor', 'inherit');
     $('input').css('cursor', 'inherit');
@@ -279,45 +284,72 @@ function resize(ui_block) {
     $block.find('.output').css('height', cell_height * ui_block.output_height - 1);
 }
 
+class DefaultOutput extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        if (_.isArray(this.props.output) || _.isObject(this.props.output)) {
+            var outputElement = [];
+            var i = 0;
+            _.each(this.props.output, (item, index, output) => {
+                if (i > this.props.output_height) {
+                    return;
+                }
+                if (_.isArray(this.props.output)) {
+                    outputElement.push(React.createElement('input', { value: item, key: item }));
+                } else {
+                    outputElement.push(React.createElement('input', { value: '' + index + ': ' + item }));
+                }
+                i += 1;
+            });
+        } else {
+            var outputElement = React.createElement('input', { value: this.props.output });
+        }
+        return React.createElement('div', null, outputElement);
+    }
+}
+
 function render_output(block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
-    var $block = $('#block-' + block.name);
-    var $output = $block.find('.output');
+    ReactDOM.render(React.createElement(DefaultOutput, {
+        output: block.output,
+        output_height: ui_block.output_height
+    }), document.querySelector('#block-' + block.name + ' .output'));
 
-    if (_.isArray(block.output) || _.isObject(block.output)) {
+    /*
+    var $block = $('#block-'+block.name)
+    var $output = $block.find('.output')
+     if (_.isArray(block.output) || _.isObject(block.output)) {
         ui_block.output_height = clamp(_.size(block.output), 1, 20);
         $block.find('.output input').filter(index => index >= ui_block.output_height).remove();
         var i = 0;
-        _.each(block.output, function (item, index) {
-            if (i > ui_block.output_height) {
-                return;
-            }
-
-            var $input = $output.find('input').eq(i);
+        _.each(block.output, function(item, index) {
+            if (i > ui_block.output_height) { return; }
+             var $input = $output.find('input').eq(i)
             if ($input.length === 0) {
-                $input = $('<input>');
-                $output.append($input);
+                $input = $('<input>')
+                $output.append($input)
             }
-
-            if (_.isArray(block.output)) {
-                $input.val(block.output[index]);
+             if (_.isArray(block.output)) {
+                $input.val(block.output[index])
             } else {
-                $input.val('' + index + ': ' + block.output[index]);
+                $input.val(''+index+': '+block.output[index])
             }
             i += 1;
-        });
+        })
     } else if (block.output !== null) {
         ui_block.output_height = 1;
         $output.find('input').val(block.output.toString());
     } else {
         ui_block.output_height = 1;
-        $output.find('input').val('None');
+        $output.find('input').val('None')
     }
-
-    resize(ui_block);
-
-    fade_background_color($output.find('input'), 1, 'rgba(255,255,0, ');
+     resize(ui_block)
+     fade_background_color($output.find('input'), 1, 'rgba(255,255,0, ')
+    */
 };
 module.exports.render_output = render_output;
 

@@ -55,6 +55,7 @@ button#new-import {
 }
 .block .output {
   border-top: 1px solid #999;
+  overflow: scroll;
 }
 .block .resize-handle {
   width: 8px;
