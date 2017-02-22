@@ -313,8 +313,18 @@ class DefaultOutput extends React.Component {
     constructor(props) {
         super(props);
     }
-    componentDidUpdate() {
-        // TODO: flash yellow
+
+    componentDidMount() {
+        this.flash_yellow();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        this.flash_yellow();
+    }
+
+    flash_yellow() {
+        var $inputs = $(this.refs.container).find('input');
+        fade_background_color($inputs, 1, 'rgba(255,255,0, ')
     }
 
     render() {
@@ -335,7 +345,7 @@ class DefaultOutput extends React.Component {
         } else {
             var outputElement: any = React.createElement('input', {value: this.props.output})
         }
-        return React.createElement('div', null, outputElement)
+        return React.createElement('div', {ref: 'container'}, outputElement)
     }
 }
 

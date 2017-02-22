@@ -289,12 +289,25 @@ class DefaultOutput extends React.Component {
         super(props);
     }
 
+    componentDidMount() {
+        this.flash_yellow();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        this.flash_yellow();
+    }
+
+    flash_yellow() {
+        var $inputs = $(this.refs.container).find('input');
+        fade_background_color($inputs, 1, 'rgba(255,255,0, ');
+    }
+
     render() {
         if (_.isArray(this.props.output) || _.isObject(this.props.output)) {
             var outputElement = [];
             var i = 0;
             _.each(this.props.output, (item, index, output) => {
-                if (i > this.props.output_height) {
+                if (i >= this.props.output_height) {
                     return;
                 }
                 if (_.isArray(this.props.output)) {
@@ -307,7 +320,7 @@ class DefaultOutput extends React.Component {
         } else {
             var outputElement = React.createElement('input', { value: this.props.output });
         }
-        return React.createElement('div', null, outputElement);
+        return React.createElement('div', { ref: 'container' }, outputElement);
     }
 }
 
