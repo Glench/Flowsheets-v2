@@ -6,7 +6,8 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "run": "flow && lessc src/style.less build/style.css && babel src/ --out-dir build/ && cp src/index.html build/ && cp src/interpreter.py build/ && electron ."
+    "devrun": "flow && lessc src/style.less build/style.css && babel src/ --out-dir build/ && cp src/index.html build/ && cp src/interpreter.py build/ && electron .",
+    "update": "git pull && npm install"
   },
   "devDependencies": {
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
