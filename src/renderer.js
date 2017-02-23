@@ -23,6 +23,32 @@ const Block = interpreter.Block;
 var ui_blocks: UIBlock[] = [];
 module.exports.ui_blocks = ui_blocks;
 
+class UIBlock {
+    row: number;
+    column: number;
+
+    should_auto_resize: boolean;
+    width_in_columns: number;
+
+    name_height: number; // in # of rows
+    code_height: number; // in # of rows
+    output_height: number; // in # of rows
+
+    block: Block;
+
+    visualization: any; // should be React.Component, but @flow is awful
+
+    constructor() {
+        this.should_auto_resize = true;
+        this.width_in_columns = 1;
+
+        this.name_height = 1;
+        this.code_height = 1;
+        this.output_height = 1;
+    }
+};
+module.exports.UIBlock = UIBlock;
+
 const rows = 100
 const columns = 30;
 const cell_width = 88; // including borders
@@ -52,29 +78,6 @@ class Resize_Drag {
 var resize_drag: ?Resize_Drag = null;
 var move_drag: ?Move_Drag = null;
 
-class UIBlock {
-    row: number;
-    column: number;
-
-    should_auto_resize: boolean;
-    width_in_columns: number;
-
-    name_height: number; // in # of rows
-    code_height: number; // in # of rows
-    output_height: number; // in # of rows
-
-    block: Block;
-
-    constructor() {
-        this.should_auto_resize = true;
-        this.width_in_columns = 1;
-
-        this.name_height = 1;
-        this.code_height = 1;
-        this.output_height = 1;
-    }
-};
-module.exports.UIBlock = UIBlock;
 
 function initialize() {
     initialize_grid();
@@ -315,25 +318,25 @@ function resize(ui_block: UIBlock) {
 function render_output(block: Block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
+    if (block.output && block.output['length']) {
+        ui_block.output_height = clamp(block.output.length, 1, 20)
+    }
+    var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
     try {
-        if (block.output && block.output['length']) {
-            ui_block.output_height = clamp(block.output.length, 1, 20)
-        }
-        
-        ReactDOM.render(React.createElement(visualizations.DefaultViz, {
+        ReactDOM.render(React.createElement(visualization, {
             output: block.output,
             output_height: ui_block.output_height,
         }), document.querySelector('#block-'+block.name+' .output'))
 
-        resize(ui_block)
     } catch(e) {
         block.error = 'Error in visualization: '+e;
         render_error(block)
     }
+    resize(ui_block)
 };
 module.exports.render_output = render_output;
 
-function fade_background_color($element, alpha, color) {
+function fade_background_color($element, alpha:number, color:string) {
     if (color[3] !== 'a') { throw 'Color needs to start with "rgba"'}
     alpha -= .04
     if (alpha < 0) {

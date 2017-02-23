@@ -56,5 +56,21 @@ app.on('activate', function () {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+app.on('will-quit', function () {
+  var ps = require('ps-node');
+
+  ps.lookup({
+    command: 'python'
+  }, function (err, resultList) {
+    if (err) {
+      throw new Error(err);
+    }
+
+    resultList.forEach(function (python_process) {
+      if (python_process && python_process.arguments[0].endsWith('interpreter.py')) {
+        ps.kill(python_process.pid);
+        process.stdout.write('killed python\n');
+      }
+    });
+  });
+});
