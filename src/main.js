@@ -72,7 +72,6 @@ app.on('will-quit', function() {
           resultList.forEach(function( python_process ){
               if (python_process && python_process.arguments[0].endsWith('interpreter.py')){
                   ps.kill(python_process.pid)
-                  process.stdout.write('killed python\n')
               }
           });
   });

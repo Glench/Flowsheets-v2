@@ -402,6 +402,15 @@ function change_code(block: Block, code: string) {
 }
 module.exports.change_code = change_code;
 
+function delete_(block_to_delete: Block) {
+    throw 'Need to delete block from interpreter'
+    // blocks = _.reject(blocks, block => block === block_to_delete);
+    // blocks.forEach(function(block) {
+    //     block.depends_on = _.reject(block.depends_on, 
+    // })
+}
+module.exports.delete_ = delete_;
+
 function update_blocks_because_this_one_changed(updatedBlock: Block):void {
     // if a block's value changes, update it and go update all the other blocks that depend on that block
     var updated_blocks: Block[] = [updatedBlock];

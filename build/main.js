@@ -57,6 +57,7 @@ app.on('activate', function () {
 });
 
 app.on('will-quit', function () {
+  // try to kill python process so it doesn't spin out of control
   var ps = require('ps-node');
 
   ps.lookup({
@@ -69,7 +70,6 @@ app.on('will-quit', function () {
     resultList.forEach(function (python_process) {
       if (python_process && python_process.arguments[0].endsWith('interpreter.py')) {
         ps.kill(python_process.pid);
-        process.stdout.write('killed python\n');
       }
     });
   });

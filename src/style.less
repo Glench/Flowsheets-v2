@@ -28,6 +28,57 @@ button#new-import {
     position: absolute;
     outline: 1px solid #999;
 
+    .menu-button {
+        position: absolute;
+        top: 5px;
+        left: 4px;
+        width: 14px;
+        color: #777;
+        font-size: 9px;
+        opacity: .6;
+        cursor: default;
+    }
+    .menu-button:hover {
+        opacity: 1;
+    }
+
+    .menu {
+        position: absolute;
+        top: 16px;
+        left: 4px;
+        background-color: white;
+        border: 1px solid #bbb; 
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: 3px 3px 9px rgba(0, 0, 0, 0.24);
+
+
+    }
+    .menu li, .submenu li {
+        padding: 6px 15px;
+        cursor: default;
+        font-family: "Helvetica Neue", Helvetica, sans-serif;
+    }
+
+    .menu li:hover, .submenu li:hover {
+        background-color: #333;
+        color: white;
+    }
+
+    .submenu {
+        background-color: white;
+        border: 1px solid #bbb;
+        position: absolute;
+        padding: 0; 
+        list-style: none;
+        box-shadow: 3px 3px 9px rgba(0, 0, 0, 0.24);
+
+        li {
+            margin: 0;
+        }
+    }
+
     .name input {
         font-weight: bold;
         font-size: 14px;

@@ -207,6 +207,49 @@ function create_and_render_block(block: Block, row: number, column: number) {
         width: cell_width-1,
     })
 
+    // menu button
+    var $menu_button = $('<div class="menu-button">').text('🔽').on('click', function(evt) {
+        var $current_menu = $block.find('.menu, .submenu')
+        if ($current_menu.length) {
+            $current_menu.remove();
+            return
+        }
+
+        var $menu = $('<ul class="menu">');
+
+        var $delete = $('<li>').text('Delete').on('click', function(evt) {
+            delete_(ui_block);
+            interpreter.delete_(block);
+        });
+        $menu.append($delete);
+
+        var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function(evt) {
+            $block.find('.submenu').remove(); // remove old ones if they're still around
+
+            var $submenu = $('<ul class="submenu">').css({
+                left: $menu.width() + 7,
+                top: $(evt.target).offset().top-33,
+            });
+            $block.append($submenu);
+
+            _.each(visualizations, function(react_component, name) {
+                var text = react_component === ui_block.visualization || (!ui_block.visualization && name == 'DefaultViz') ? name+'︎&nbsp;✔' : name;
+                var $li = $('<li>').html(text).on('click', function(evt) {
+                    $block.find('.menu, .submenu').remove();
+                    ui_block.visualization = react_component;
+                    render_output(block);
+                });
+                $submenu.append($li)
+            })
+        }).on('mouseleave', function(evt) {
+            // $block.find('.submenu').remove();
+        });
+        $menu.append($viz);
+
+        $block.prepend($menu)
+    });
+    $block.append($menu_button)
+
     // name
     var $name = $('<div class="name">')
     $name.append($('<input>').attr('value', block.name).attr('readOnly', true).on('change', function(evt) {
@@ -313,13 +356,11 @@ function resize(ui_block: UIBlock) {
     $block.find('.output').css('height', cell_height*ui_block.output_height - 1);
 }
 
-
-
 function render_output(block: Block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
-    if (block.output && block.output['length']) {
-        ui_block.output_height = clamp(block.output.length, 1, 20)
+    if (_.isArray(block.output) && _.isObject(block.output)) {
+        ui_block.output_height = clamp(_.size(block.output), 1, 20)
     }
     var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
     try {
@@ -335,6 +376,12 @@ function render_output(block: Block) {
     resize(ui_block)
 };
 module.exports.render_output = render_output;
+
+function delete_(ui_block: UIBlock) {
+    $('#block-'+ui_block.block.name).remove();
+    ui_blocks = _.reject(ui_blocks, ui_block_to_reject => ui_block_to_reject === ui_block) 
+    console.log(ui_blocks)
+}
 
 function fade_background_color($element, alpha:number, color:string) {
     if (color[3] !== 'a') { throw 'Color needs to start with "rgba"'}

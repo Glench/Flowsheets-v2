@@ -6,7 +6,7 @@ const $ = require('jquery');
 
 function fade_background_color($element, alpha:number, color:string) {
     if (color[3] !== 'a') { throw 'Color needs to start with "rgba"'}
-    alpha -= .04
+        alpha -= .04
     if (alpha < 0) {
         $element.css('background-color', 'transparent')
         return
