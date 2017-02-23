@@ -2,6 +2,8 @@ const _ = require('underscore');
 const React = require('react');
 const $ = require('jquery');
 
+const cell_height = require('./renderer').cell_height;
+
 function fade_background_color($element, alpha, color) {
     if (color[3] !== 'a') {
         throw 'Color needs to start with "rgba"';
@@ -43,12 +45,25 @@ class DefaultViz extends React.Component {
                     return;
                 }
                 if (_.isArray(this.props.output)) {
-                    outputElement.push(React.createElement('input', { value: item, key: item }));
+                    outputElement.push(React.createElement('input', { value: item, key: `${index}-${item}` }));
                 } else {
                     outputElement.push(React.createElement('input', { value: '' + index + ': ' + item }));
                 }
                 i += 1;
             });
+
+            var text = 'Length: ' + _.size(this.props.output);
+            outputElement.push(React.createElement('div', { key: 'length', style: {
+                    position: 'absolute',
+                    right: 0,
+                    bottom: 0,
+                    fontSize: 9,
+                    padding: '2px',
+                    border: '1px solid #ddd',
+                    backgroundColor: '#eee',
+                    fontFamily: 'Clear Sans, Helvetica Neue, sans-serif',
+                    fontWeight: 'bold'
+                } }, text));
         } else {
             var outputElement = React.createElement('input', { value: this.props.output });
         }

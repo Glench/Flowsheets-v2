@@ -53,6 +53,7 @@ const rows = 100
 const columns = 30;
 const cell_width = 88; // including borders
 const cell_height = 19; // including borders
+module.exports.cell_height = cell_height;
 
 class Move_Drag {
     start_x: number;
@@ -290,8 +291,11 @@ function create_and_render_block(block: Block, row: number, column: number) {
     var $code = $('<div class="code">')
     $code.append($('<input>').attr('value', block.code).attr('placeholder', 'python code').on('change', function(evt) {
         interpreter.change_code(block, evt.target.value);
-    }).on('change', function(evt) {
-        evt.stopPropagation();
+    }).on('keypress', function(evt) {
+        var code = evt.target.value;
+        if (evt.which == 13 && code == block.code) {
+            interpreter.change_code(block, evt.target.value);
+        }
     }))
     $block.append($code);
 
@@ -360,7 +364,9 @@ function render_output(block: Block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
     if (_.isArray(block.output) && _.isObject(block.output)) {
-        ui_block.output_height = clamp(_.size(block.output), 1, 20)
+        ui_block.output_height = clamp(_.size(block.output), 1, 40)
+    } else {
+        ui_block.output_height = 1;
     }
     var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
     try {

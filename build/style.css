@@ -7,6 +7,7 @@ body {
 body {
   font: 14px/1 "Courier", monospace;
   color: black;
+  margin: 10px;
 }
 #imports {
   display: inline-block;
@@ -24,14 +25,17 @@ button#new-import {
   outline: 1px solid #999;
 }
 .block .menu-button {
+  opacity: 0;
   position: absolute;
   top: 5px;
   left: 4px;
   width: 14px;
   color: #777;
   font-size: 9px;
-  opacity: .6;
   cursor: default;
+}
+.block:hover .menu-button {
+  opacity: .6;
 }
 .block .menu-button:hover {
   opacity: 1;
