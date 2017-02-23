@@ -6,7 +6,7 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "devrun": "flow && lessc src/style.less build/style.css && babel src/ --out-dir build/ && cp src/index.html build/ && cp src/interpreter.py build/ && electron .",
+    "run": "flow && lessc src/style.less build/style.css && babel src/ --out-dir build/ && cp src/index.html build/ && cp src/interpreter.py build/ && electron .",
     "update": "git pull && npm install"
   },
   "devDependencies": {

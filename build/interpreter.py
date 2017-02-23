@@ -23,7 +23,7 @@ def stringify(obj):
 
 user_globals = {'stringify': stringify, 'izip': izip, 'starmap': starmap}
 
-with open('/Users/glen/tmp/'+str(datetime.now())+'.txt', 'wb') as log_file:
+with open(str(datetime.now())+'.txt', 'wb') as log_file:
 
     while True:
 

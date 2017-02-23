@@ -13,8 +13,15 @@ function assert(condition: boolean) {
 const ui = require('./renderer.js');
 
 
-var python_interpreter = spawn('python', [__dirname+'/interpreter.py']);
-module.exports.python_interpreter = python_interpreter;
+if (__dirname.endsWith('build')) {
+    var python_interpreter = spawn('python', [__dirname+'/interpreter.py']);
+    python_interpreter.on('close', function(data) {
+        alert("Python processes closed! Try to restart? Error code: "+data)
+    })
+    module.exports.python_interpreter = python_interpreter;
+} else {
+    throw "Can't find interpreter.py, __dirname is: "+__dirname;
+}
 
 
 function get_user_identifiers(python_expression: string) {
