@@ -363,10 +363,12 @@ function resize(ui_block: UIBlock) {
 function render_output(block: Block) {
     var ui_block = ui_blocks.filter(ui_block => ui_block.block === block)[0];
 
-    if (_.isArray(block.output) && _.isObject(block.output)) {
-        ui_block.output_height = clamp(_.size(block.output), 1, 40)
-    } else {
-        ui_block.output_height = 1;
+    if (ui_block.should_auto_resize) {
+        if (_.isArray(block.output) && _.isObject(block.output)) {
+            ui_block.output_height = clamp(_.size(block.output), 1, 40)
+        } else {
+            ui_block.output_height = 1;
+        }
     }
     var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
     try {
