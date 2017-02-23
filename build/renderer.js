@@ -268,7 +268,8 @@ function create_and_render_block(block, row, column) {
     $code.append($('<input>').attr('value', block.code).attr('placeholder', 'python code').on('change', function (evt) {
         interpreter.change_code(block, evt.target.value);
     }).on('keypress', function (evt) {
-        if (evt.which == 13) {
+        var code = evt.target.value;
+        if (evt.which == 13 && code == block.code) {
             interpreter.change_code(block, evt.target.value);
         }
     }));
