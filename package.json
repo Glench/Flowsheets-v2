@@ -1,6 +1,9 @@
 {
   "name": "flowsheetsv2",
   "main": "build/main.js",
+  "engines": {
+    "node": ">=7.5.0"
+  },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "run": "flow && lessc src/style.less build/style.css && babel src/ --out-dir build/ && cp src/index.html build/ && cp src/interpreter.py build/ && electron ."
