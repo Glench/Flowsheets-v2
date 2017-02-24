@@ -72,5 +72,5 @@ with open(str(datetime.now())+'.txt', 'wb') as log_file:
 
             log_file.write(cleaned_payload+'\n')
             log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'stringify', 'izip', 'starmap')}
-            log_file.write('current globals: {}\n'.format(log_globals))
+            # log_file.write('current globals: {}\n'.format(log_globals))
             log_file.flush()
