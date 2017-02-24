@@ -277,6 +277,10 @@ function create_and_render_block(block, row, column) {
                     // if user presses enter when no newlines, run the code, otherwise put in newline
                     interpreter.change_code(block, code);
                 } else {
+                    if (ui_block.should_auto_resize) {
+                        ui_block.code_height = _.filter(code, x => x == '\n').length + 2;
+                        resize(ui_block);
+                    }
                     instance.replaceSelection('\n');
                 }
             },
@@ -286,23 +290,21 @@ function create_and_render_block(block, row, column) {
                     // if user presses ctrl-enter when there are newlines, run the code
                     interpreter.change_code(block, code);
                 } else {
+                    if (ui_block.should_auto_resize) {
+                        ui_block.code_height = _.filter(code, x => x == '\n').length + 2;
+                        resize(ui_block);
+                    }
                     instance.replaceSelection('\n');
                 }
             }
         }
     });
-    // codemirror.on('change', function(instance) {
-    //     console.log(_.includes(instance.getValue(), '\n'))
-    // })
-
-    // $code.append($('<input>').attr('value', block.code).attr('placeholder', 'python code').on('change', function(evt) {
-    //     interpreter.change_code(block, evt.target.value);
-    // }).on('keypress', function(evt) {
-    //     var code = evt.target.value;
-    //     if (evt.which == 13 && !evt.ctrlKey && code == block.code) {
-    //         interpreter.change_code(block, evt.target.value);
-    //     }
-    // }))
+    codemirror.on('change', function (instance) {
+        if (ui_block.should_auto_resize) {
+            ui_block.code_height = _.filter(instance.getValue(), x => x == '\n').length + 1;
+            resize(ui_block);
+        }
+    });
     $block.append($code);
 
     // output
@@ -361,6 +363,7 @@ function resize(ui_block) {
         height: cell_height * (ui_block.name_height + ui_block.code_height + ui_block.output_height) - 1
     });
 
+    $block.find('.code').css('height', cell_height * ui_block.code_height - 1);
     $block.find('.output').css('height', cell_height * ui_block.output_height - 1);
 }
 

@@ -87,7 +87,7 @@ button#new-import {
 
     .name input {
         font-weight: bold;
-        font-size: 14px;
+        font-size: 14px !important;
         text-align: center;
         background-color: #000 !important;
         color: white;
@@ -108,7 +108,7 @@ button#new-import {
             -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
         }
 
-        input, .CodeMirror butt {
+        input {
             height: @cell_height - 2px;
 
             display: block;
@@ -117,6 +117,7 @@ button#new-import {
             // width: @cell_width - 6px;
             border: 0;
             padding: 0 3px 2px 3px;
+            font-size: 13px;
         }
     }
 
@@ -127,6 +128,7 @@ button#new-import {
             height: 100%;
             font-family: "Menlo", "Andale Mono", monospace;
             font-size: 12px;
+            line-height: 1;
         }
     }
     .output {

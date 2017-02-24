@@ -301,6 +301,10 @@ function create_and_render_block(block: Block, row: number, column: number) {
                     // if user presses enter when no newlines, run the code, otherwise put in newline
                     interpreter.change_code(block, code)
                 } else {
+                    if (ui_block.should_auto_resize) {
+                        ui_block.code_height = _.filter(code, x => x == '\n').length+2
+                        resize(ui_block);
+                    }
                     instance.replaceSelection('\n')
                 }
             },
@@ -310,11 +314,21 @@ function create_and_render_block(block: Block, row: number, column: number) {
                     // if user presses ctrl-enter when there are newlines, run the code
                     interpreter.change_code(block, code)
                 } else {
+                    if (ui_block.should_auto_resize) {
+                        ui_block.code_height = _.filter(code, x => x == '\n').length+2
+                        resize(ui_block);
+                    }
                     instance.replaceSelection('\n')
                 }
             },
         }
     });
+    codemirror.on('change', function(instance) {
+        if (ui_block.should_auto_resize) {
+            ui_block.code_height = _.filter(instance.getValue(), x => x == '\n').length+1
+            resize(ui_block);
+        }
+    })
     $block.append($code);
 
 
@@ -375,6 +389,7 @@ function resize(ui_block: UIBlock) {
         height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height) - 1,
     })
 
+    $block.find('.code').css('height', cell_height*ui_block.code_height - 1);
     $block.find('.output').css('height', cell_height*ui_block.output_height - 1);
 }
 
