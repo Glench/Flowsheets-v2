@@ -327,7 +327,10 @@ function create_and_render_block(block: Block, row: number, column: number) {
         if (ui_block.should_auto_resize) {
             var code = instance.getValue();
             ui_block.code_height = _.filter(code, x => x == '\n').length+1;
-            ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / 10.5), 1, columns);
+
+            // make block width equal to the number of characters that will fit in a cell,
+            var number_of_characters_that_will_fit_in_a_cell = 10.5;
+            ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, columns);
             resize(ui_block);
         }
     })
@@ -364,8 +367,8 @@ function create_and_render_block(block: Block, row: number, column: number) {
 module.exports.create_and_render_block = create_and_render_block;
 
 function render_code(block: Block) {
-    var $code_input = $('#block-'+block.name).find('.code input');
-    $code_input.val(block.code);
+    var $code_input = $('#block-'+block.name).find('.code .CodeMirror');
+    $code_input.get(0).CodeMirror.setValue(block.code)
     fade_background_color($code_input, 1, 'rgba(220,220,220, ')
 }
 module.exports.render_code = render_code;
