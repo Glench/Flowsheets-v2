@@ -109,3 +109,13 @@ class TextDiffViz extends React.Component {
     }
 }
 module.exports.TextDiffViz = TextDiffViz;
+
+class RawJSONViz extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        return React.createElement('pre', { style: { margin: 0, lineHeight: 1.38 } }, JSON.stringify(this.props.block.output, null, '    '));
+    }
+}module.exports.RawJSONViz = RawJSONViz;
