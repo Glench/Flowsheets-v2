@@ -301,7 +301,9 @@ function create_and_render_block(block, row, column) {
     });
     codemirror.on('change', function (instance) {
         if (ui_block.should_auto_resize) {
-            ui_block.code_height = _.filter(instance.getValue(), x => x == '\n').length + 1;
+            var code = instance.getValue();
+            ui_block.code_height = _.filter(code, x => x == '\n').length + 1;
+            ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / 10.5), 1, columns);
             resize(ui_block);
         }
     });
