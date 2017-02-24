@@ -385,8 +385,8 @@ function render_output(block) {
     var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
     try {
         ReactDOM.render(React.createElement(visualization, {
-            output: block.output,
-            output_height: ui_block.output_height
+            block: block,
+            ui_block: ui_block
         }), document.querySelector('#block-' + block.name + ' .output'));
     } catch (e) {
         block.error = 'Error in visualization: ' + e;

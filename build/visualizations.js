@@ -1,6 +1,7 @@
 const _ = require('underscore');
 const React = require('react');
 const $ = require('jquery');
+const diff = require('diff');
 
 const cell_height = require('./renderer').cell_height;
 
@@ -37,14 +38,14 @@ class DefaultViz extends React.Component {
     }
 
     render() {
-        if (_.isArray(this.props.output) || _.isObject(this.props.output)) {
+        if (_.isArray(this.props.block.output) || _.isObject(this.props.block.output)) {
             var outputElement = [];
             var i = 0;
-            _.each(this.props.output, (item, index, output) => {
-                if (i >= this.props.output_height) {
+            _.each(this.props.block.output, (item, index, output) => {
+                if (i >= this.props.ui_block.output_height) {
                     return;
                 }
-                if (_.isArray(this.props.output)) {
+                if (_.isArray(this.props.block.output)) {
                     outputElement.push(React.createElement('input', { value: item, key: `${index}-${item}` }));
                 } else {
                     outputElement.push(React.createElement('input', { value: '' + index + ': ' + item }));
@@ -52,7 +53,7 @@ class DefaultViz extends React.Component {
                 i += 1;
             });
 
-            var text = 'Length: ' + _.size(this.props.output);
+            var text = 'Length: ' + _.size(this.props.block.output);
             outputElement.push(React.createElement('div', { key: 'length', style: {
                     position: 'absolute',
                     right: 0,
@@ -65,7 +66,7 @@ class DefaultViz extends React.Component {
                     fontWeight: 'bold'
                 } }, text));
         } else {
-            var outputElement = React.createElement('input', { value: this.props.output });
+            var outputElement = React.createElement('input', { value: this.props.block.output });
         }
         return React.createElement('div', { ref: 'container' }, outputElement);
     }
@@ -78,7 +79,33 @@ class HTMLViz extends React.Component {
     }
 
     render() {
-        return React.createElement('div', { dangerouslySetInnerHTML: { __html: this.props.output } });
+        return React.createElement('div', { dangerouslySetInnerHTML: { __html: this.props.block.output } });
     }
 }
 module.exports.HTMLViz = HTMLViz;
+
+class TextDiffViz extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        var first_string_block = _.find(this.props.block.depends_on, test_block => _.isString(test_block.output));
+        if (!first_string_block) {
+            return React.createElement('div', null, this.props.block.output);
+        }
+
+        var changes = diff.diffChars(first_string_block.output, this.props.block.output);
+        return React.createElement('div', null, changes.map((part, i) => {
+            return React.createElement('span', {
+                style: {
+                    color: part.added ? 'green' : part.removed ? 'red' : 'grey',
+                    fontWeight: part.added ? 'bold' : 'normal',
+                    textDecoration: part.removed ? 'line-through' : 'none'
+                },
+                key: i
+            }, part.value);
+        }));
+    }
+}
+module.exports.TextDiffViz = TextDiffViz;
