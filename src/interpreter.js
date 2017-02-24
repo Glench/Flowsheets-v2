@@ -143,7 +143,7 @@ python_interpreter.stderr.on('readable', () => {
 
 function python_exec(python_code: string) {
     assert(success_queue.length !== 0 && fail_queue.length !== 0); // should never have something on the queue without a success and error handler
-    python_interpreter.stdin.write(`__EXEC:${python_code.replace('\n', '__NEWLINE__')}\n`);
+    python_interpreter.stdin.write(`__EXEC:${python_code.replace(/\n/g, '__NEWLINE__')}\n`);
 };
 
 
@@ -269,7 +269,7 @@ function python_declare(block: Block) {
         return
     }
 
-    console.log('declaring python: ', python_function_declaration)
+    console.log('declaring python:', python_function_declaration)
     var no_op = function() {};
     var success = function(data: string) {
         block.error = '';
@@ -307,7 +307,7 @@ function python_run(block: Block) {
         python_code = `${block.name} = ${block.code}`; 
     }
 
-    console.log('running python: ', python_code)
+    console.log('running python:', python_code)
     var no_op = function() {};
     var success = function(data: string) {
         block.error = '';

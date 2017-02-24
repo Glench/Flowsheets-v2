@@ -41,6 +41,7 @@ button#new-import {
   opacity: 1;
 }
 .block .menu {
+  z-index: 100;
   position: absolute;
   top: 16px;
   left: 4px;
@@ -63,6 +64,7 @@ button#new-import {
   color: white;
 }
 .block .submenu {
+  z-index: 100;
   background-color: white;
   border: 1px solid #bbb;
   position: absolute;

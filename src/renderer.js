@@ -4,6 +4,7 @@ const $ = require('jquery');
 const _ = require('underscore');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const CodeMirror = require('codemirror');
 
 // @Cleanup: probably move to utils at some point
 function clamp(num: number, min: number, max: number):number {
@@ -289,14 +290,31 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
     // code
     var $code = $('<div class="code">')
-    $code.append($('<input>').attr('value', block.code).attr('placeholder', 'python code').on('change', function(evt) {
-        interpreter.change_code(block, evt.target.value);
-    }).on('keypress', function(evt) {
-        var code = evt.target.value;
-        if (evt.which == 13 && code == block.code) {
-            interpreter.change_code(block, evt.target.value);
+    var codemirror = CodeMirror($code.get(0), {
+        value: block.code,
+        mode: 'python',
+        autofocus: true,
+        extraKeys: {
+            'Enter': function(instance) {
+                var code = instance.getValue()
+                if (!_.includes(code, '\n')) {
+                    // if user presses enter when no newlines, run the code, otherwise put in newline
+                    interpreter.change_code(block, code)
+                } else {
+                    instance.replaceSelection('\n')
+                }
+            },
+            'Ctrl-Enter': function(instance) {
+                var code = instance.getValue()
+                if (_.includes(code, '\n')) {
+                    // if user presses ctrl-enter when there are newlines, run the code
+                    interpreter.change_code(block, code)
+                } else {
+                    instance.replaceSelection('\n')
+                }
+            },
         }
-    }))
+    });
     $block.append($code);
 
 
@@ -388,7 +406,6 @@ module.exports.render_output = render_output;
 function delete_(ui_block: UIBlock) {
     $('#block-'+ui_block.block.name).remove();
     ui_blocks = _.reject(ui_blocks, ui_block_to_reject => ui_block_to_reject === ui_block) 
-    console.log(ui_blocks)
 }
 
 function fade_background_color($element, alpha:number, color:string) {

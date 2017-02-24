@@ -47,6 +47,7 @@ button#new-import {
     }
 
     .menu {
+        z-index: 100;
         position: absolute;
         top: 16px;
         left: 4px;
@@ -71,6 +72,7 @@ button#new-import {
     }
 
     .submenu {
+        z-index: 100;
         background-color: white;
         border: 1px solid #bbb;
         position: absolute;
@@ -96,7 +98,17 @@ button#new-import {
         height: @cell_height;
         overflow: scroll;
 
-        input {
+        ::-webkit-scrollbar {
+            -webkit-appearance: none;
+            width: 7px;
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 4px;
+            background-color: rgba(0,0,0,.5);
+            -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+        }
+
+        input, .CodeMirror butt {
             height: @cell_height - 2px;
 
             display: block;
@@ -111,8 +123,10 @@ button#new-import {
     .code {
         // border-bottom: 1px solid #999;
         height: @cell_height - 1px;
-        input {
+        .CodeMirror {
+            height: 100%;
             font-family: "Menlo", "Andale Mono", monospace;
+            font-size: 12px;
         }
     }
     .output {
