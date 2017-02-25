@@ -105,9 +105,7 @@ function initialize_grid() {
         var column = Math.floor((evt.offsetX - 2) / cell_width);
         var row = Math.floor((evt.offsetY - 2) / cell_height);
 
-        var last_block = _.last(interpreter.blocks);
-        var block = interpreter.create_block(null, last_block.name);
-        block.depends_on = [last_block];
+        var block = interpreter.create_block(null, '1+1');
         create_and_render_block(block, row, column);
     });
 
@@ -270,6 +268,7 @@ function create_and_render_block(block, row, column) {
         value: block.code,
         mode: 'python',
         autofocus: true,
+        tabSize: 2,
         extraKeys: {
             'Enter': function (instance) {
                 var code = instance.getValue();
@@ -299,6 +298,7 @@ function create_and_render_block(block, row, column) {
             }
         }
     });
+    codemirror.setSelection({ line: 0, ch: 0 }, { line: Infinity, ch: Infinity }); // highlight all code
     codemirror.on('change', function (instance) {
         if (ui_block.should_auto_resize) {
             var code = instance.getValue();
@@ -309,6 +309,9 @@ function create_and_render_block(block, row, column) {
             ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, columns);
             resize(ui_block);
         }
+    });
+    codemirror.on('blur', function (instance, evt) {
+        instance.setSelection({ line: 0, ch: 0 });
     });
     $block.append($code);
 
@@ -336,7 +339,9 @@ function create_and_render_block(block, row, column) {
     $block.append($resize);
 
     $('#blocks').append($block);
-    $code.find('input').focus().select();
+
+    // code editor
+    codemirror.refresh();
 };
 module.exports.create_and_render_block = create_and_render_block;
 
