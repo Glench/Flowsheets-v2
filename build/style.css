@@ -122,6 +122,14 @@ button#new-import {
   font-size: 12px;
   line-height: 1;
 }
+.block .code-resizer {
+  position: absolute;
+  z-index: 100;
+  margin-top: -1.5px;
+  height: 3px;
+  width: 100%;
+  cursor: ns-resize;
+}
 .block .output {
   border-top: 1px solid #999;
   overflow: scroll;

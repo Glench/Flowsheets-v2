@@ -78,8 +78,14 @@ class Resize_Drag {
     original_output_height: number;
 }
 
+class Resize_Code_Drag {
+    start_row: number;
+    ui_block: UIBlock;
+}
+
 var resize_drag: ?Resize_Drag = null;
 var move_drag: ?Move_Drag = null;
+var resize_code_drag: ?Resize_Code_Drag = null;
 
 
 function initialize() {
@@ -169,6 +175,13 @@ function initialize_grid() {
 
                 resize(move_drag.ui_block)
             }
+        } else if (resize_code_drag) {
+            var grid = document.querySelector('#main');
+            if (!grid) { return; } // extraneous code for @flow
+            var y_wrt_grid = evt.pageY - grid.getBoundingClientRect().top + 1;
+
+            resize_code_drag.ui_block.code_height = clamp(Math.ceil(y_wrt_grid / cell_height)-1, 1, rows); // @Cleanup should be rows-block height
+            resize(resize_code_drag.ui_block)
         }
     });
 }
@@ -183,7 +196,7 @@ function create_and_render_import() {
 }
 
 function reset_dragging(evt) {
-    if (!resize_drag && !move_drag) {
+    if (!resize_drag && !move_drag && !resize_code_drag) {
         return
     }
     evt.preventDefault();
@@ -191,6 +204,7 @@ function reset_dragging(evt) {
     $('input').css('cursor', 'inherit')
     resize_drag = null;
     move_drag = null;
+    resize_code_drag = null;
 }
 
 function create_and_render_block(block: Block, row: number, column: number) {
@@ -218,7 +232,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
         var $menu = $('<ul class="menu">');
 
-        var $delete = $('<li>').text('Delete').on('click', function(evt) {
+        var $delete = $('<li>').text('Delete (not working yet)').on('click', function(evt) {
             delete_(ui_block);
             interpreter.delete_(block);
         });
@@ -339,6 +353,21 @@ function create_and_render_block(block: Block, row: number, column: number) {
         instance.setSelection({line:0, ch:0})
     })
     $block.append($code);
+
+
+    // code resizer
+    var $code_resizer = $('<div class="code-resizer">');
+    $code_resizer.on('mousedown', function(evt) {
+        evt.preventDefault();
+
+        $('body').css('cursor', 'ns-resize');
+        ui_block.should_auto_resize = false;
+
+        resize_code_drag = new Resize_Code_Drag();
+        resize_code_drag.start_row = ui_block.row + ui_block.code_height;
+        resize_code_drag.ui_block = ui_block;
+    })
+    $block.append($code_resizer)
 
 
     // output

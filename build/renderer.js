@@ -56,8 +56,11 @@ class Move_Drag {
 
 class Resize_Drag {}
 
+class Resize_Code_Drag {}
+
 var resize_drag = null;
 var move_drag = null;
+var resize_code_drag = null;
 
 function initialize() {
     initialize_grid();
@@ -147,6 +150,15 @@ function initialize_grid() {
 
                 resize(move_drag.ui_block);
             }
+        } else if (resize_code_drag) {
+            var grid = document.querySelector('#main');
+            if (!grid) {
+                return;
+            } // extraneous code for 
+            var y_wrt_grid = evt.pageY - grid.getBoundingClientRect().top + 1;
+
+            resize_code_drag.ui_block.code_height = clamp(Math.ceil(y_wrt_grid / cell_height) - 1, 1, rows); // @Cleanup should be rows-block height
+            resize(resize_code_drag.ui_block);
         }
     });
 }
@@ -161,7 +173,7 @@ function create_and_render_import() {
 }
 
 function reset_dragging(evt) {
-    if (!resize_drag && !move_drag) {
+    if (!resize_drag && !move_drag && !resize_code_drag) {
         return;
     }
     evt.preventDefault();
@@ -169,6 +181,7 @@ function reset_dragging(evt) {
     $('input').css('cursor', 'inherit');
     resize_drag = null;
     move_drag = null;
+    resize_code_drag = null;
 }
 
 function create_and_render_block(block, row, column) {
@@ -196,7 +209,7 @@ function create_and_render_block(block, row, column) {
 
         var $menu = $('<ul class="menu">');
 
-        var $delete = $('<li>').text('Delete').on('click', function (evt) {
+        var $delete = $('<li>').text('Delete (not working yet)').on('click', function (evt) {
             delete_(ui_block);
             interpreter.delete_(block);
         });
@@ -205,7 +218,6 @@ function create_and_render_block(block, row, column) {
         var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function (evt) {
             $block.find('.submenu').remove(); // remove old ones if they're still around
 
-            console.log(evt.target, $(evt.target).offset());
             var $submenu = $('<ul class="submenu">').css({
                 left: $menu.width() + 7,
                 top: 30
@@ -316,6 +328,20 @@ function create_and_render_block(block, row, column) {
         instance.setSelection({ line: 0, ch: 0 });
     });
     $block.append($code);
+
+    // code resizer
+    var $code_resizer = $('<div class="code-resizer">');
+    $code_resizer.on('mousedown', function (evt) {
+        evt.preventDefault();
+
+        $('body').css('cursor', 'ns-resize');
+        ui_block.should_auto_resize = false;
+
+        resize_code_drag = new Resize_Code_Drag();
+        resize_code_drag.start_row = ui_block.row + ui_block.code_height;
+        resize_code_drag.ui_block = ui_block;
+    });
+    $block.append($code_resizer);
 
     // output
     var $output = $('<div class="output">');
