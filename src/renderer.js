@@ -5,6 +5,7 @@ const _ = require('underscore');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const CodeMirror = require('codemirror');
+require('codemirror/mode/python/python');
 
 // @Cleanup: probably move to utils at some point
 function clamp(num: number, min: number, max: number):number {
@@ -228,7 +229,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
             var $submenu = $('<ul class="submenu">').css({
                 left: $menu.width() + 7,
-                top: $(evt.target).offset().top-33,
+                top: 30,
             });
             $block.append($submenu);
 

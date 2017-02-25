@@ -3,6 +3,7 @@ const _ = require('underscore');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const CodeMirror = require('codemirror');
+require('codemirror/mode/python/python');
 
 // @Cleanup: probably move to utils at some point
 function clamp(num, min, max) {
@@ -204,9 +205,10 @@ function create_and_render_block(block, row, column) {
         var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function (evt) {
             $block.find('.submenu').remove(); // remove old ones if they're still around
 
+            console.log(evt.target, $(evt.target).offset());
             var $submenu = $('<ul class="submenu">').css({
                 left: $menu.width() + 7,
-                top: $(evt.target).offset().top - 33
+                top: 30
             });
             $block.append($submenu);
 
