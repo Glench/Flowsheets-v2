@@ -350,17 +350,24 @@ function create_and_render_block(block: Block, row: number, column: number) {
         }
 
         // render references
-        var marks = instance.getAllMarks();
-        marks.forEach(mark => mark.clear()); // destroy and recreate all codemirror marks
+        try {
+            var marks = instance.getAllMarks();
+            marks.forEach(mark => mark.clear()); // destroy and recreate all codemirror marks
 
-        var positions = interpreter.get_user_identifiers_with_positions(instance.getValue());
-        positions.forEach(position => {
-            instance.markText(
-                {line: position.start_line, ch: position.start_ch},
-                {line: position.end_line, ch: position.end_ch},
-                {className: 'flowsheets-reference'}
-             )
-        })
+            var positions = interpreter.get_user_identifiers_with_positions(instance.getValue());
+            positions.forEach(position => {
+                var element = $('<span class="flowsheets-reference">').text(position.name).on('mouseenter', function(evt) {
+                    $('#block-'+position.name).addClass('flowsheets-highlighted')
+                }).on('mouseleave', function(evt) {
+                    $('#block-'+position.name).removeClass('flowsheets-highlighted')
+                }).get(0)
+                instance.markText(
+                    {line: position.start_line, ch: position.start_ch},
+                    {line: position.end_line, ch: position.end_ch},
+                    {replacedWith: element}
+                 )
+            })
+        } catch(e) {}
     });
     codemirror.on('blur', function(instance, evt) {
         instance.setSelection({line:0, ch:0})

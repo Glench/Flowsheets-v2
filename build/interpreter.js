@@ -57,7 +57,7 @@ function get_user_identifiers_with_positions(python_expression) {
     // remove all references to built-ins
     return names_and_positions.filter(location => {
         var key = location.name;
-        return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key);
+        return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key) && _.contains(blocks.map(block => block.name), key);
     });
 }
 module.exports.get_user_identifiers_with_positions = get_user_identifiers_with_positions;

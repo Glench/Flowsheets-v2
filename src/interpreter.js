@@ -64,7 +64,8 @@ function get_user_identifiers_with_positions(python_expression: string):Object[]
         var key = location.name;
         return !_.has(filbert.pythonRuntime, key) &&
                !_.has(filbert.pythonRuntime.functions, key) &&
-               !_.has(filbert.pythonRuntime.ops, key);
+               !_.has(filbert.pythonRuntime.ops, key) &&
+               _.contains(blocks.map(block => block.name), key);
     });
 }
 module.exports.get_user_identifiers_with_positions = get_user_identifiers_with_positions;

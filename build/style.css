@@ -24,6 +24,14 @@ button#new-import {
   position: absolute;
   outline: 1px solid #999;
 }
+.block.flowsheets-highlighted {
+  outline-color: black;
+  z-index: 1000;
+}
+.block.flowsheets-highlighted .name input {
+  color: black;
+  background-color: yellow;
+}
 .block .menu-button {
   opacity: 0;
   position: absolute;
@@ -77,15 +85,17 @@ button#new-import {
 }
 .block .name input {
   font-weight: bold;
-  font-size: 14px !important;
+  font-size: 14px;
   text-align: center;
-  background-color: #000 !important;
+  background-color: #000;
   color: white;
+}
+.block .output input {
+  background-color: rgba(255, 255, 255, 0.6);
 }
 .block .name,
 .block .code,
 .block .output {
-  background-color: rgba(255, 255, 255, 0.6);
   height: 19px;
   overflow: scroll;
 }
@@ -108,10 +118,8 @@ button#new-import {
   height: 17px;
   display: block;
   width: 100%;
-  background-color: transparent;
   border: 0;
   padding: 0 3px 2px 3px;
-  font-size: 13px;
 }
 .block .code {
   height: 18px;
@@ -123,8 +131,17 @@ button#new-import {
   line-height: 1;
 }
 .block .code .CodeMirror .flowsheets-reference {
-  background-color: black;
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  background-color: #000;
   color: white;
+  font-weight: bold;
+  padding: 0 3px;
+  margin: 0 1px;
+  border: 1px solid #ccc;
+}
+.block .code .CodeMirror .flowsheets-reference:hover {
+  color: black;
+  background-color: yellow;
 }
 .block .code-resizer {
   position: absolute;
