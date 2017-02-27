@@ -309,11 +309,22 @@ function create_and_render_block(block, row, column) {
                     }
                     instance.replaceSelection('\n');
                 }
+            },
+            'Tab': function (instance) {
+                var current_place = instance.getCursor();
+                var current_line = instance.getLine(current_place.line);
+                if (current_place.ch == current_line.length && !current_line.match(/^\s*$/)) {
+                    var new_block = interpreter.create_block(null, '1+1');
+                    create_and_render_block(new_block, ui_block.row, ui_block.column + ui_block.width_in_columns);
+                } else {
+                    instance.replaceSelection('  '); // @Robustness: should use codemirror tab options to do this
+                }
             }
         }
     });
     codemirror.setSelection({ line: 0, ch: 0 }, { line: Infinity, ch: Infinity }); // highlight all code
     codemirror.on('change', function (instance) {
+        // resize block automatically
         if (ui_block.should_auto_resize) {
             var code = instance.getValue();
             ui_block.code_height = _.filter(code, x => x == '\n').length + 1;
@@ -332,9 +343,17 @@ function create_and_render_block(block, row, column) {
             var positions = interpreter.get_user_identifiers_with_positions(instance.getValue());
             positions.forEach(position => {
                 var element = $('<span class="flowsheets-reference">').text(position.name).on('mouseenter', function (evt) {
-                    $('#block-' + position.name).addClass('flowsheets-highlighted');
+                    var $reference_block = $('#block-' + position.name);
+                    if (!$reference_block.length) {
+                        $reference_block = $('#block-' + position.name.slice(0, position.name.length - 1));
+                    }
+                    $reference_block.addClass('flowsheets-highlighted');
                 }).on('mouseleave', function (evt) {
-                    $('#block-' + position.name).removeClass('flowsheets-highlighted');
+                    var $reference_block = $('#block-' + position.name);
+                    if (!$reference_block.length) {
+                        $reference_block = $('#block-' + position.name.slice(0, position.name.length - 1));
+                    }
+                    $reference_block.removeClass('flowsheets-highlighted');
                 }).get(0);
 
                 instance.markText({ line: position.start_line, ch: position.start_ch }, { line: position.end_line, ch: position.end_ch }, { replacedWith: element });
@@ -362,6 +381,14 @@ function create_and_render_block(block, row, column) {
 
     // output
     var $output = $('<div class="output">');
+    $output.on('scroll', function (evt) {
+        var scroll_top = evt.target.scrollTop;
+        interpreter.blocks.forEach(function (test_block) {
+            if (test_block.depends_on.includes(block)) {
+                $('#block-' + test_block.name).find('.output').scrollTop(scroll_top);
+            }
+        });
+    });
     $output.append($('<input>').attr('value', block.output).on('click', function (evt) {
         evt.stopPropagation();
     }));
