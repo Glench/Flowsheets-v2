@@ -24,13 +24,13 @@ if (__dirname.endsWith('build')) {
 }
 
 
-function get_user_identifiers(python_expression: string) {
+function get_user_identifiers(python_expression: string):string[] {
     var advance_token = filbert.tokenize(python_expression)
     var token = advance_token();
     var names = {};
     while (token.type.type !== 'eof') {
         if (token.type.type === 'name') {
-            names[token.value] = true
+            names[token.value] = true;
         }
         token = advance_token();
     }
@@ -40,8 +40,34 @@ function get_user_identifiers(python_expression: string) {
                !_.has(filbert.pythonRuntime.functions, key) &&
                !_.has(filbert.pythonRuntime.ops, key);
     });
-
 }
+
+function get_user_identifiers_with_positions(python_expression: string):Object[] {
+    var advance_token = filbert.tokenize(python_expression, {locations: true})
+    var token = advance_token();
+    var names_and_positions = [];
+    while (token.type.type !== 'eof') {
+        if (token.type.type === 'name') {
+            var location = {
+                name:       token.value,
+                start_line: token.startLoc.line-1, // 1-based index for some reason
+                start_ch:   token.startLoc.column,
+                end_line:   token.endLoc.line-1, // 1-based index for some reason
+                end_ch:    token.endLoc.column,
+            }
+            names_and_positions.push(location);
+        }
+        token = advance_token();
+    }
+    // remove all references to built-ins
+    return names_and_positions.filter(location => {
+        var key = location.name;
+        return !_.has(filbert.pythonRuntime, key) &&
+               !_.has(filbert.pythonRuntime.functions, key) &&
+               !_.has(filbert.pythonRuntime.ops, key);
+    });
+}
+module.exports.get_user_identifiers_with_positions = get_user_identifiers_with_positions;
 
 function replace_python_names(old_code: string, to_replace: string, replace_with: string): string {
     // replace `to_replace` with `replace_with` in `old_code`

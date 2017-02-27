@@ -122,6 +122,10 @@ button#new-import {
   font-size: 12px;
   line-height: 1;
 }
+.block .code .CodeMirror .flowsheets-reference {
+  background-color: black;
+  color: white;
+}
 .block .code-resizer {
   position: absolute;
   z-index: 100;

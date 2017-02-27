@@ -323,6 +323,15 @@ function create_and_render_block(block, row, column) {
             ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, columns);
             resize(ui_block);
         }
+
+        // render references
+        var marks = instance.getAllMarks();
+        marks.forEach(mark => mark.clear()); // destroy and recreate all codemirror marks
+
+        var positions = interpreter.get_user_identifiers_with_positions(instance.getValue());
+        positions.forEach(position => {
+            instance.markText({ line: position.start_line, ch: position.start_ch }, { line: position.end_line, ch: position.end_ch }, { className: 'flowsheets-reference' });
+        });
     });
     codemirror.on('blur', function (instance, evt) {
         instance.setSelection({ line: 0, ch: 0 });
