@@ -336,6 +336,7 @@ function create_and_render_block(block, row, column) {
                 }).on('mouseleave', function (evt) {
                     $('#block-' + position.name).removeClass('flowsheets-highlighted');
                 }).get(0);
+
                 instance.markText({ line: position.start_line, ch: position.start_ch }, { line: position.end_line, ch: position.end_ch }, { replacedWith: element });
             });
         } catch (e) {}

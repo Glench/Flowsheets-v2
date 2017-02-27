@@ -53,7 +53,7 @@ function get_user_identifiers_with_positions(python_expression: string):Object[]
                 start_line: token.startLoc.line-1, // 1-based index for some reason
                 start_ch:   token.startLoc.column,
                 end_line:   token.endLoc.line-1, // 1-based index for some reason
-                end_ch:    token.endLoc.column,
+                end_ch:     token.endLoc.column,
             }
             names_and_positions.push(location);
         }
@@ -62,10 +62,12 @@ function get_user_identifiers_with_positions(python_expression: string):Object[]
     // remove all references to built-ins
     return names_and_positions.filter(location => {
         var key = location.name;
+        var current_names = blocks.map(block => block.name)
         return !_.has(filbert.pythonRuntime, key) &&
                !_.has(filbert.pythonRuntime.functions, key) &&
                !_.has(filbert.pythonRuntime.ops, key) &&
-               _.contains(blocks.map(block => block.name), key);
+               (_.contains(current_names, key) || _.contains(current_names, key.slice(0, key.length-1)));
+               // remove tail _ from name
     });
 }
 module.exports.get_user_identifiers_with_positions = get_user_identifiers_with_positions;

@@ -43,7 +43,7 @@ class DefaultViz extends React.Component {
             var outputElement: any = [];
             var i = 0;
             _.each(this.props.block.output, (item, index, output) => {
-                if (i >= this.props.ui_block.output_height) {
+                if (i >= 40) {
                     return
                 }
                 if (_.isArray(this.props.block.output)) {
