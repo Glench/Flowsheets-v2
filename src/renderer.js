@@ -164,23 +164,20 @@ function initialize_grid() {
             resize(resize_drag.ui_block)
         } else if (move_drag) {
             if (move_drag.is_dragging(evt.pageX, evt.pageY)) {
-                var grid = document.querySelector('#main');
-                if (!grid) { return; } // extraneous code for @flow
-                var x_wrt_grid = evt.pageX - grid.getBoundingClientRect().left + 1;
-                var y_wrt_grid = evt.pageY - grid.getBoundingClientRect().top + 1;
+                var offset = $('#main').offset();
+                var x_wrt_grid = evt.pageX - offset.left + 1;
+                var y_wrt_grid = evt.pageY - offset.top + 1;
 
-                // @Cleanup
                 move_drag.ui_block.row = clamp(Math.floor(y_wrt_grid / cell_height), 0, rows);
                 move_drag.ui_block.column = clamp(Math.floor(x_wrt_grid / cell_width), 0, columns);
 
                 resize(move_drag.ui_block)
             }
         } else if (resize_code_drag) {
-            var grid = document.querySelector('#main');
-            if (!grid) { return; } // extraneous code for @flow
-            var y_wrt_grid = evt.pageY - grid.getBoundingClientRect().top + 1;
+            var y_wrt_grid = (evt.pageY - $('#main').offset().top) + 1;
+            var ui_block = resize_code_drag.ui_block;
 
-            resize_code_drag.ui_block.code_height = clamp(Math.ceil(y_wrt_grid / cell_height)-1, 1, rows); // @Cleanup should be rows-block height
+            resize_code_drag.ui_block.code_height = clamp(Math.ceil((y_wrt_grid - (ui_block.row+ui_block.name_height)*cell_height)/ cell_height)-1, 1, rows); // @Cleanup should be rows-block height
             resize(resize_code_drag.ui_block)
         }
     });
@@ -356,7 +353,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
             // make block width equal to the number of characters that will fit in a cell,
             var number_of_characters_that_will_fit_in_a_cell = 10.5;
-            ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, columns);
+            ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, 8);
             resize(ui_block);
         }
 

@@ -103,13 +103,14 @@ button#new-import {
 .block .output {
   height: 19px;
   overflow: scroll;
+  background-color: rgba(255, 255, 255, 0.6);
 }
 .block .name input,
 .block .code input,
 .block .output input {
   height: 17px;
   display: block;
-  width: 100%;
+  width: 99%;
   border: 0;
   padding: 0 3px 2px 3px;
 }
@@ -133,7 +134,7 @@ button#new-import {
   height: 100%;
   font-family: "Menlo", "Andale Mono", monospace;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.3;
 }
 .block .code .CodeMirror .flowsheets-reference {
   font-family: "Helvetica Neue", Helvetica, sans-serif;
