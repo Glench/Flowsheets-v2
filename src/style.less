@@ -146,6 +146,26 @@ button#new-import {
         // border-bottom: 1px solid #999;
         height: @cell_height - 1px;
         .CodeMirror {
+            &.is_string_concat {
+                background-color: #ccc;
+                font-style: italic;
+
+                &:before {
+                    content: '”';
+                    position: absolute;
+                    font-size: 40px;
+                    opacity: .25;
+                    font-family: Helvetica;
+                    font-weight: bold;
+                    top: -9px;
+                    right: 5px;
+                }
+
+                .flowsheets-reference {
+                    border: 1px solid #ddd;
+                }
+            }
+
             height: 100%;
             font-family: "Menlo", "Andale Mono", monospace;
             font-size: 12px;

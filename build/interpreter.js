@@ -208,6 +208,7 @@ class Block {
 
     constructor() {
         this.depends_on = [];
+        this.is_string_concat = false;
     } //JSONType;
 
 
@@ -248,24 +249,37 @@ function python_import(python_code) {
 module.exports.python_import = python_import;
 
 function python_declare(block) {
+    var code = block.code;
+    if (block.is_string_concat) {
+        var token_re = /\$\{.+?\}/g; // e.g. ${butts}
+        var tokens = code.match(token_re);
+        if (tokens && tokens.length) {
+            tokens.forEach(token => code = code.replace(token, '{}'));
+            var expressions = tokens.map(token => token.replace(/^\$\{/, '').replace(/\}$/, '')); // remove ${ and } from ${butts}, leaving only 'butts'
+            code = `"""${code}""".format(${expressions.join(',')})`;
+        } else {
+            code = `"""${code}"""`;
+        }
+    }
+
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
+    var map_variables = _.uniq(get_user_identifiers(code).filter(name => _.last(name) == '_'));
 
     var python_function_declaration;
     var python_function_name = `_${block.name}_function`;
-    if (block.code.indexOf('return') > -1) {
+    if (code.indexOf('return') > -1) {
         // function
         if (map_variables.length > 0) {
             // need arguments
             python_function_declaration = `def ${python_function_name}(${map_variables.join(', ')}):
-  ${block.code.split('\n').join('\n  ')}`;
+  ${code.split('\n').join('\n  ')}`;
         } else {
             python_function_declaration = `def ${python_function_name}():
-  ${block.code.split('\n').join('\n  ')}`;
+  ${code.split('\n').join('\n  ')}`;
         }
     } else if (map_variables.length > 0) {
         // lambda
-        python_function_declaration = `${python_function_name} = lambda ${map_variables.join(', ')}: ${block.code}`;
+        python_function_declaration = `${python_function_name} = lambda ${map_variables.join(', ')}: ${code}`;
     } else {
         // just an expression, don't declare anything
         return;
@@ -295,18 +309,31 @@ function python_declare(block) {
 
 function python_run(block) {
 
+    var code = block.code;
+    if (block.is_string_concat) {
+        var token_re = /\$\{.+?\}/g; // e.g. ${butts}
+        var tokens = code.match(token_re);
+        if (tokens && tokens.length) {
+            tokens.forEach(token => code = code.replace(token, '{}'));
+            var expressions = tokens.map(token => token.replace(/^\$\{/, '').replace(/\}$/, '')); // remove ${ and } from ${butts}, leaving only 'butts'
+            code = `"""${code}""".format(${expressions.join(',')})`;
+        } else {
+            code = `"""${code}"""`;
+        }
+    }
+
     var python_code;
 
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) == '_'));
+    var map_variables = _.uniq(get_user_identifiers(code).filter(name => _.last(name) == '_'));
     if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
         python_code = `${block.name} = list(starmap(_${block.name}_function, izip(${zip_variables.join(',')})))`;
-    } else if (block.code.indexOf('return') > -1) {
+    } else if (code.indexOf('return') > -1) {
         python_code = `${block.name} = _${block.name}_function()`;
     } else {
-        python_code = `${block.name} = ${block.code}`;
+        python_code = `${block.name} = ${code}`;
     }
 
     console.log('running python:', python_code);
@@ -358,7 +385,21 @@ function change_name(block, name) {
     // Anything that depends on `block` should have its code updated
     blocks.forEach(test_block => {
         if (test_block.depends_on.includes(block)) {
-            test_block.code = replace_python_names(test_block.code, old_name, block.name);
+            if (test_block.is_string_concat) {
+                var token_re = /\$\{.+?\}/g; // e.g. ${butts}
+                var tokens = test_block.code.match(token_re);
+                if (tokens && tokens.length) {
+                    var expressions = tokens.map(token => token.replace(/^\$\{/, '').replace(/\}$/, '')); // remove ${ and } from ${butts}, leaving only 'butts'
+                    _.zip(tokens, expressions).forEach(function (tokenexpression) {
+                        var token = tokenexpression[0];
+                        var expression = tokenexpression[1];
+                        var new_token = '${' + replace_python_names(expression, old_name, block.name) + '}';
+                        test_block.code = test_block.code.replace(token, new_token);
+                    });
+                }
+            } else {
+                test_block.code = replace_python_names(test_block.code, old_name, block.name);
+            }
             ui.render_code(test_block);
         }
     });
@@ -384,8 +425,22 @@ module.exports.change_name = change_name;
 function change_code(block, code) {
     block.code = code;
 
+    var names = [];
     try {
-        var names = get_user_identifiers(block.code);
+        if (block.is_string_concat) {
+            // @Cleanup @Refactor: move this logic to more central location
+            var token_re = /\$\{.+?\}/g; // e.g. ${butts}
+            var tokens = code.match(token_re);
+            if (tokens && tokens.length) {
+                var expressions = tokens.map(token => token.replace(/^\$\{/, '').replace(/\}$/, '')); // remove ${ and } from ${butts}, leaving only 'butts'
+                expressions.forEach(expression => {
+                    var new_names = get_user_identifiers(expression);
+                    new_names.forEach(name => names.push(name));
+                });
+            }
+        } else {
+            names = get_user_identifiers(block.code);
+        }
     } catch (e) {
         // syntax error in filbert parsing most likely
         block.error = e;

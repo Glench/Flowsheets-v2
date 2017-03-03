@@ -136,6 +136,23 @@ button#new-import {
   font-size: 12px;
   line-height: 1.3;
 }
+.block .code .CodeMirror.is_string_concat {
+  background-color: #ccc;
+  font-style: italic;
+}
+.block .code .CodeMirror.is_string_concat:before {
+  content: '”';
+  position: absolute;
+  font-size: 40px;
+  opacity: .25;
+  font-family: Helvetica;
+  font-weight: bold;
+  top: -9px;
+  right: 5px;
+}
+.block .code .CodeMirror.is_string_concat .flowsheets-reference {
+  border: 1px solid #ddd;
+}
 .block .code .CodeMirror .flowsheets-reference {
   font-family: "Helvetica Neue", Helvetica, sans-serif;
   background-color: #000;

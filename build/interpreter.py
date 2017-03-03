@@ -21,6 +21,12 @@ class FlowsheetsJSONEncoder(json.JSONEncoder):
 def stringify(obj):
     return json.dumps(obj, sort_keys=True, cls=FlowsheetsJSONEncoder)
 
+def starfilter(func, args_iterable, should_yield_iterable):
+    # starfilter(lambda x,y: x+y, [(1,2), (2,1)], imap(lambda z: z > 1, [1,2])) -> [2+1]
+    for args, should_yield in izip(args_iterable, should_yield_iterable):
+        if should_yield:
+            yield func(*args)
+
 user_globals = {'stringify': stringify, 'izip': izip, 'starmap': starmap}
 
 with open(str(datetime.now())+'.txt', 'wb') as log_file:

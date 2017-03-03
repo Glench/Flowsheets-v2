@@ -229,11 +229,40 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
         var $menu = $('<ul class="menu">');
 
-        var $delete = $('<li>').text('Delete (not working yet)').on('click', function(evt) {
+        var $delete = $('<li>').text('Delete (todo)').on('click', function(evt) {
             delete_(ui_block);
             interpreter.delete_(block);
         });
         $menu.append($delete);
+
+        var $make_string = $('<li>').html(block.is_string_concat ? 'Make string&nbsp;✔' : 'Make string').on('click', function(evt) {
+            var $make_string = $(evt.target);
+            if (!block.is_string_concat) {
+                block.is_string_concat = true;
+                $block.find('.code .CodeMirror').addClass('is_string_concat')
+            } else {
+                block.is_string_concat = false;
+                $make_string.text('Make string')
+                $block.find('.code .CodeMirror').removeClass('is_string_concat')
+            }
+            $block.find('.menu, .submenu').remove();
+
+        });
+        $menu.append($make_string)
+
+        var $filter = $('<li>').text('Add filter (todo)').on('click', function(evt) {
+            if (block.filter_clause) {
+                return
+            }
+            // TODO for filter clause:
+                // ui_block.filter_clause_height
+                    // resize(ui_block) changes
+                // block.filter_clause
+                // run_python(block) changes
+                    // set up _blockname_filter_func, make sure change_code(block) renames right
+                    // starfilter
+        });
+        $menu.append($filter);
 
         var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function(evt) {
             $block.find('.submenu').remove(); // remove old ones if they're still around
