@@ -256,7 +256,7 @@ function create_block(name: ?string, code: string) {
 
     python_declare(block);
 
-    update_blocks_because_this_one_changed(block);
+    recompute_this_and_dependent_blocks(block);
 
     return block;
 }
@@ -276,6 +276,10 @@ function python_import(python_code: string) {
     python_exec(python_code)
 }
 module.exports.python_import = python_import;
+
+// === b ===
+// a.split('\n')
+// 'itunes:duration' in b_
 
 function python_declare(block: Block) {
     var code = block.code;
@@ -492,9 +496,18 @@ function change_code(block: Block, code: string) {
 
     python_declare(block)
 
-    update_blocks_because_this_one_changed(block);
+    recompute_this_and_dependent_blocks(block);
 }
 module.exports.change_code = change_code;
+
+function change_filter_clause(block: Block, code: string) {
+    block.filter_clause = code; 
+
+    python_declare(block)
+
+    recompute_this_and_dependent_blocks(block);
+}
+module.exports.change_filter_clause = change_filter_clause;
 
 function delete_(block_to_delete: Block) {
     throw 'Need to delete block from interpreter'
@@ -505,7 +518,7 @@ function delete_(block_to_delete: Block) {
 }
 module.exports.delete_ = delete_;
 
-function update_blocks_because_this_one_changed(updatedBlock: Block):void {
+function recompute_this_and_dependent_blocks(updatedBlock: Block):void {
     // if a block's value changes, update it and go update all the other blocks that depend on that block
     var updated_blocks: Block[] = [updatedBlock];
     while (updated_blocks.length) {
@@ -519,4 +532,4 @@ function update_blocks_because_this_one_changed(updatedBlock: Block):void {
         }) 
     }
 }
-module.exports.update_blocks_because_this_one_changed = update_blocks_because_this_one_changed;
+module.exports.recompute_this_and_dependent_blocks = recompute_this_and_dependent_blocks;

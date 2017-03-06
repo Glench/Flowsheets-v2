@@ -143,8 +143,11 @@ button#new-import {
 
 
     .code {
-        // border-bottom: 1px solid #999;
+    }
+    .code, .filter_clause {
+        border-bottom: 1px solid #999;
         height: @cell_height - 1px;
+
         .CodeMirror {
             &.is_string_concat {
                 background-color: #ccc;
@@ -204,7 +207,7 @@ button#new-import {
 
 
     .output {
-        border-top: 1px solid #999;
+        //border-top: 1px solid #999;
         overflow: scroll;
     }
 

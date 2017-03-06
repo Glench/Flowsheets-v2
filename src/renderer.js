@@ -32,9 +32,10 @@ class UIBlock {
     should_auto_resize: boolean;
     width_in_columns: number;
 
-    name_height: number; // in # of rows
-    code_height: number; // in # of rows
-    output_height: number; // in # of rows
+    name_height: number; // in # of rows, not pixels
+    code_height: number; // in # of rows, not pixels
+    filter_clause_height: number; // in # of rows, not pixels
+    output_height: number; // in # of rows, not pixels
 
     block: Block;
 
@@ -46,6 +47,7 @@ class UIBlock {
 
         this.name_height = 1;
         this.code_height = 1;
+        this.filter_clause_height = 0;
         this.output_height = 1;
     }
 };
@@ -250,16 +252,31 @@ function create_and_render_block(block: Block, row: number, column: number) {
         });
         $menu.append($make_string)
 
-        var $filter = $('<li>').text('Add filter (todo)').on('click', function(evt) {
+        var text = block.filter_clause ? 'Remove Filter' : 'Add Filter';
+        var $filter = $('<li>').text(text+' (todo)').on('click', function(evt) {
+            $block.find('.menu, .submenu').remove();
             if (block.filter_clause) {
+                block.filter_clause = null;
+
+                $block.find('.filter_clause').hide();
+                ui_block.filter_clause_height = 0;
+                resize(ui_block);
+
+                // @TODO: rerun code when filter is removed
                 return
             }
+            $block.find('.filter_clause').show().find('.CodeMirror').get(0).CodeMirror.refresh();
+            block.filter_clause = 'True'
+            ui_block.filter_clause_height = 1;
+
+            resize(ui_block);
+
             // TODO for filter clause:
-                // ui_block.filter_clause_height
-                    // resize(ui_block) changes
-                // block.filter_clause
+                // filter clause works on self, or works on other blocks e.g. a = ['all', 'dictionary', 'words'], filter on a: a_.startswith('w')
+
                 // run_python(block) changes
-                    // set up _blockname_filter_func, make sure change_code(block) renames right
+                    // set up _blockname_filter_func,
+                    // make sure change_code(block) renames right
                     // starfilter
         });
         $menu.append($filter);
@@ -327,98 +344,108 @@ function create_and_render_block(block: Block, row: number, column: number) {
     $block.append($name);
 
 
+    function make_codemirror(element:HTMLElement, code:string, ui_block_cell_name: string, update_func: Function) {
+        var codemirror = CodeMirror(element, {
+            value: code,
+            mode: 'python',
+            autofocus: true,
+            tabSize: 2,
+            extraKeys: {
+                'Enter': function(instance) {
+                    var code = instance.getValue()
+                    if (!_.includes(code, '\n')) {
+                        // if user presses enter when no newlines, run the code, otherwise put in newline
+                        update_func(block, code)
+                    } else {
+                        if (ui_block.should_auto_resize) {
+                            var _ui_block:Object = ui_block; // stupid @flow workaround: https://github.com/facebook/flow/issues/1730
+                            _ui_block[ui_block_cell_name] = _.filter(code, x => x == '\n').length+2
+                            resize(ui_block);
+                        }
+                        instance.replaceSelection('\n')
+                    }
+                },
+                'Ctrl-Enter': function(instance) {
+                    var code = instance.getValue()
+                    if (_.includes(code, '\n')) {
+                        // if user presses ctrl-enter when there are newlines, run the code
+                        update_func(block, code)
+                    } else {
+                        if (ui_block.should_auto_resize) {
+                            var _ui_block:Object = ui_block; // stupid @flow workaround: https://github.com/facebook/flow/issues/1730
+                            _ui_block[ui_block_cell_name] = _.filter(code, x => x == '\n').length+2
+                            resize(ui_block);
+                        }
+                        instance.replaceSelection('\n')
+                    }
+                },
+                'Tab': function(instance) {
+                    var current_place = instance.getCursor();
+                    var current_line = instance.getLine(current_place.line);
+                    if (current_place.ch == current_line.length && !current_line.match(/^\s*$/)) {
+                        var new_block = interpreter.create_block(null, '1+1')
+                        create_and_render_block(new_block, ui_block.row, ui_block.column + ui_block.width_in_columns)
+                    } else {
+                        instance.replaceSelection('  ') // @Robustness: should use codemirror tab options to do this
+                    }
+                },
+            }
+        });
+        codemirror.setSelection({line: 0, ch: 0}, {line: Infinity, ch: Infinity}); // highlight all code
+        codemirror.on('change', function(instance) {
+            // resize block automatically
+            if (ui_block.should_auto_resize) {
+                var code = instance.getValue();
+                var _ui_block:Object = ui_block; // stupid @flow workaround: https://github.com/facebook/flow/issues/1730
+                _ui_block[ui_block_cell_name] = _.filter(code, x => x == '\n').length+1;
+
+                // make block width equal to the number of characters that will fit in a cell,
+                var number_of_characters_that_will_fit_in_a_cell = 10.5;
+                // make block's size fit the longest line in a code editor
+                ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, 8);
+                resize(ui_block);
+            }
+
+            // render references
+            try {
+                var marks = instance.getAllMarks();
+                marks.forEach(mark => mark.clear()); // destroy and recreate all codemirror marks
+
+                var positions = interpreter.get_user_identifiers_with_positions(instance.getValue());
+                positions.forEach(position => {
+                    var element = $('<span class="flowsheets-reference">').text(position.name).on('mouseenter', function(evt) {
+                        var $reference_block = $('#block-'+position.name)
+                        if (!$reference_block.length) {
+                            $reference_block = $('#block-'+position.name.slice(0,position.name.length-1))
+                        }
+                        $reference_block.addClass('flowsheets-highlighted')
+                    }).on('mouseleave', function(evt) {
+                        var $reference_block = $('#block-'+position.name)
+                        if (!$reference_block.length) {
+                            $reference_block = $('#block-'+position.name.slice(0,position.name.length-1))
+                        }
+                        $reference_block.removeClass('flowsheets-highlighted')
+                    }).get(0)
+
+                    instance.markText(
+                        {line: position.start_line, ch: position.start_ch},
+                        {line: position.end_line, ch: position.end_ch},
+                        {replacedWith: element}
+                     )
+                })
+            } catch(e) { }
+        });
+        codemirror.on('blur', function(instance, evt) {
+            instance.setSelection({line:0, ch:0})
+        });
+
+        return codemirror;
+    };
+
     // code
     var $code = $('<div class="code">')
-    var codemirror = CodeMirror($code.get(0), {
-        value: block.code,
-        mode: 'python',
-        autofocus: true,
-        tabSize: 2,
-        extraKeys: {
-            'Enter': function(instance) {
-                var code = instance.getValue()
-                if (!_.includes(code, '\n')) {
-                    // if user presses enter when no newlines, run the code, otherwise put in newline
-                    interpreter.change_code(block, code)
-                } else {
-                    if (ui_block.should_auto_resize) {
-                        ui_block.code_height = _.filter(code, x => x == '\n').length+2
-                        resize(ui_block);
-                    }
-                    instance.replaceSelection('\n')
-                }
-            },
-            'Ctrl-Enter': function(instance) {
-                var code = instance.getValue()
-                if (_.includes(code, '\n')) {
-                    // if user presses ctrl-enter when there are newlines, run the code
-                    interpreter.change_code(block, code)
-                } else {
-                    if (ui_block.should_auto_resize) {
-                        ui_block.code_height = _.filter(code, x => x == '\n').length+2
-                        resize(ui_block);
-                    }
-                    instance.replaceSelection('\n')
-                }
-            },
-            'Tab': function(instance) {
-                var current_place = instance.getCursor();
-                var current_line = instance.getLine(current_place.line);
-                if (current_place.ch == current_line.length && !current_line.match(/^\s*$/)) {
-                    var new_block = interpreter.create_block(null, '1+1')
-                    create_and_render_block(new_block, ui_block.row, ui_block.column + ui_block.width_in_columns)
-                } else {
-                    instance.replaceSelection('  ') // @Robustness: should use codemirror tab options to do this
-                }
-            },
-        }
-    });
-    codemirror.setSelection({line: 0, ch: 0}, {line: Infinity, ch: Infinity}); // highlight all code
-    codemirror.on('change', function(instance) {
-        // resize block automatically
-        if (ui_block.should_auto_resize) {
-            var code = instance.getValue();
-            ui_block.code_height = _.filter(code, x => x == '\n').length+1;
-
-            // make block width equal to the number of characters that will fit in a cell,
-            var number_of_characters_that_will_fit_in_a_cell = 10.5;
-            ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, 8);
-            resize(ui_block);
-        }
-
-        // render references
-        try {
-            var marks = instance.getAllMarks();
-            marks.forEach(mark => mark.clear()); // destroy and recreate all codemirror marks
-
-            var positions = interpreter.get_user_identifiers_with_positions(instance.getValue());
-            positions.forEach(position => {
-                var element = $('<span class="flowsheets-reference">').text(position.name).on('mouseenter', function(evt) {
-                    var $reference_block = $('#block-'+position.name)
-                    if (!$reference_block.length) {
-                        $reference_block = $('#block-'+position.name.slice(0,position.name.length-1))
-                    }
-                    $reference_block.addClass('flowsheets-highlighted')
-                }).on('mouseleave', function(evt) {
-                    var $reference_block = $('#block-'+position.name)
-                    if (!$reference_block.length) {
-                        $reference_block = $('#block-'+position.name.slice(0,position.name.length-1))
-                    }
-                    $reference_block.removeClass('flowsheets-highlighted')
-                }).get(0)
-
-                instance.markText(
-                    {line: position.start_line, ch: position.start_ch},
-                    {line: position.end_line, ch: position.end_ch},
-                    {replacedWith: element}
-                 )
-            })
-        } catch(e) { }
-    });
-    codemirror.on('blur', function(instance, evt) {
-        instance.setSelection({line:0, ch:0})
-    });
-    $block.append($code);
+    var code_mirror = make_codemirror($code.get(0), block.code, 'code_height', interpreter.change_code);
+    $block.append($code)
 
 
     // code resizer
@@ -435,6 +462,13 @@ function create_and_render_block(block: Block, row: number, column: number) {
     })
     $block.append($code_resizer)
 
+
+    // filter clause
+    var $filter_clause = $('<div class="filter_clause">').hide();
+    var filter_codemirror = make_codemirror($filter_clause.get(0), 'True', 'filter_clause_height', interpreter.change_filter_clause);
+    $block.append($filter_clause);
+
+    // @TODO: need to add resizer UI for filter clause
 
     // output
     var $output = $('<div class="output">');
@@ -470,8 +504,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
     $('#blocks').append($block);
 
-    // code editor
-    codemirror.refresh();
+    code_mirror.refresh(); // refresh in order to make text show up properly
 };
 module.exports.create_and_render_block = create_and_render_block;
 
@@ -500,11 +533,12 @@ function resize(ui_block: UIBlock) {
         top: ui_block.row*cell_height + 1,
         left: ui_block.column*cell_width + 1,
         width: ui_block.width_in_columns*cell_width - 1,
-        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.output_height) - 1,
+        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.filter_clause_height+ui_block.output_height) - 1,
     })
 
     $block.find('.code').css('height', cell_height*ui_block.code_height - 1);
-    $block.find('.output').css('height', cell_height*ui_block.output_height - 1);
+    $block.find('.filter_clause').css('height', cell_height*ui_block.filter_clause_height - 1);
+    $block.find('.output').css('height', cell_height*ui_block.output_height - 2);
 }
 
 function render_output(block: Block) {

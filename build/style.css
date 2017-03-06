@@ -127,20 +127,25 @@ button#new-import {
         }
         */
 }
-.block .code {
+.block .code,
+.block .filter_clause {
+  border-bottom: 1px solid #999;
   height: 18px;
 }
-.block .code .CodeMirror {
+.block .code .CodeMirror,
+.block .filter_clause .CodeMirror {
   height: 100%;
   font-family: "Menlo", "Andale Mono", monospace;
   font-size: 12px;
   line-height: 1.3;
 }
-.block .code .CodeMirror.is_string_concat {
+.block .code .CodeMirror.is_string_concat,
+.block .filter_clause .CodeMirror.is_string_concat {
   background-color: #ccc;
   font-style: italic;
 }
-.block .code .CodeMirror.is_string_concat:before {
+.block .code .CodeMirror.is_string_concat:before,
+.block .filter_clause .CodeMirror.is_string_concat:before {
   content: '”';
   position: absolute;
   font-size: 40px;
@@ -150,10 +155,12 @@ button#new-import {
   top: -9px;
   right: 5px;
 }
-.block .code .CodeMirror.is_string_concat .flowsheets-reference {
+.block .code .CodeMirror.is_string_concat .flowsheets-reference,
+.block .filter_clause .CodeMirror.is_string_concat .flowsheets-reference {
   border: 1px solid #ddd;
 }
-.block .code .CodeMirror .flowsheets-reference {
+.block .code .CodeMirror .flowsheets-reference,
+.block .filter_clause .CodeMirror .flowsheets-reference {
   font-family: "Helvetica Neue", Helvetica, sans-serif;
   background-color: #000;
   color: white;
@@ -162,7 +169,8 @@ button#new-import {
   margin: 0 1px;
   border: 1px solid #ccc;
 }
-.block .code .CodeMirror .flowsheets-reference:hover {
+.block .code .CodeMirror .flowsheets-reference:hover,
+.block .filter_clause .CodeMirror .flowsheets-reference:hover {
   color: black;
   background-color: yellow;
 }
@@ -175,7 +183,6 @@ button#new-import {
   cursor: ns-resize;
 }
 .block .output {
-  border-top: 1px solid #999;
   overflow: scroll;
 }
 .block .resize-handle {
