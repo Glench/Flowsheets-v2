@@ -469,17 +469,18 @@ function change_name(block, name) {
                         test_block.code = test_block.code.replace(token, new_token);
                     });
                 }
+                ui.render_code(test_block);
             } else {
                 test_block.code = replace_python_names(test_block.code, old_name, block.name);
+                ui.render_code(test_block);
                 if (test_block.filter_clause) {
                     test_block.filter_clause = replace_python_names(test_block.filter_clause, old_name, block.name);
+                    ui.render_filter_clause(test_block);
                 }
             }
-            ui.render_code(test_block);
         }
     });
 
-    // @TODO!!!!!!: update with filter clause
     var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) === '_'));
     if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
         var old_function_name = `_${old_name}_function`;
@@ -489,7 +490,14 @@ function change_name(block, name) {
         var python_code = `${block.name} = ${old_name}; del ${old_name}`;
     }
 
-    var callback = () => {}; //console.log(`Block ${old_name} name changed to ${block.name}`)
+    if (block.filter_clause) {
+        var old_filter_function_name = `_${old_name}_filter_function`;
+        var new_filter_function_name = `_${block.name}_filter_function`;
+
+        python_code = `${new_filter_function_name} = ${old_filter_function_name}; del ${old_filter_function_name}; ${python_code}`;
+    }
+    console.log('executing python in `change_name`:', python_code);
+    var callback = () => {};
     success_queue.push(callback);
     fail_queue.push(callback);
     python_exec(python_code);
@@ -565,6 +573,24 @@ function change_filter_clause(block, code) {
     recompute_this_and_dependent_blocks(block);
 }
 module.exports.change_filter_clause = change_filter_clause;
+
+function remove_filter_clause(block) {
+    block.filter_clause = null;
+
+    // @TODO: delete filter clause, rerun code with filter removed
+    var python_code = `del _${block.name}_filter_function;`;
+
+    var no_op = function () {};
+    success_queue.push(no_op);
+    fail_queue.push(no_op);
+
+    console.log('executing python code from `remove_filter_clause`:', python_code);
+    python_exec(python_code);
+
+    python_declare(block);
+    recompute_this_and_dependent_blocks(block);
+}
+module.exports.remove_filter_clause = remove_filter_clause;
 
 function delete_(block_to_delete) {
     throw 'Need to delete block from interpreter';

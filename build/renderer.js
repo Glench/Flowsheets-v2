@@ -225,31 +225,24 @@ function create_and_render_block(block, row, column) {
         $menu.append($make_string);
 
         var text = block.filter_clause ? 'Remove Filter' : 'Add Filter';
-        var $filter = $('<li>').text(text + ' (todo)').on('click', function (evt) {
+        var $filter = $('<li>').text(text).on('click', function (evt) {
             $block.find('.menu, .submenu').remove();
             if (block.filter_clause) {
-                block.filter_clause = null;
+                interpreter.remove_filter_clause(block);
 
                 $block.find('.filter_clause').hide();
                 ui_block.filter_clause_height = 0;
                 resize(ui_block);
 
-                // @TODO: rerun code when filter is removed
                 return;
             }
-            $block.find('.filter_clause').show().find('.CodeMirror').get(0).CodeMirror.refresh();
+            var cm = $block.find('.filter_clause').show().find('.CodeMirror').get(0).CodeMirror;
+            cm.refresh();
+            cm.focus();
             block.filter_clause = 'True';
             ui_block.filter_clause_height = 1;
 
             resize(ui_block);
-
-            // TODO for filter clause:
-            // filter clause works on self, or works on other blocks e.g. a = ['all', 'dictionary', 'words'], filter on a: a_.startswith('w')
-
-            // run_python(block) changes
-            // set up _blockname_filter_func,
-            // make sure change_code(block) renames right
-            // starfilter
         });
         $menu.append($filter);
 
@@ -477,6 +470,13 @@ function render_code(block) {
     fade_background_color($code_input, 1, 'rgba(220,220,220, ');
 }
 module.exports.render_code = render_code;
+
+function render_filter_clause(block) {
+    var $filter_input = $('#block-' + block.name).find('.filter_clause .CodeMirror');
+    $filter_input.get(0).CodeMirror.setValue(block.filter_clause);
+    fade_background_color($filter_input, 1, 'rgba(220,220,220, ');
+}
+module.exports.render_filter_clause = render_filter_clause;
 
 function render_error(block) {
     var $output = $('#block-' + block.name).find('.output input');

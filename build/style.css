@@ -100,6 +100,7 @@ button#new-import {
 }
 .block .name,
 .block .code,
+.block .filter_clause,
 .block .output {
   height: 19px;
   overflow: scroll;
@@ -107,6 +108,7 @@ button#new-import {
 }
 .block .name input,
 .block .code input,
+.block .filter_clause input,
 .block .output input {
   height: 17px;
   display: block;
@@ -115,6 +117,7 @@ button#new-import {
   padding: 0 3px 2px 3px;
 }
 .block .output {
+  overflow: scroll;
   /*
         &::-webkit-scrollbar {
             -webkit-appearance: none;
@@ -138,6 +141,7 @@ button#new-import {
   font-family: "Menlo", "Andale Mono", monospace;
   font-size: 12px;
   line-height: 1.3;
+  background-color: white;
 }
 .block .code .CodeMirror.is_string_concat,
 .block .filter_clause .CodeMirror.is_string_concat {
@@ -181,9 +185,6 @@ button#new-import {
   height: 3px;
   width: 100%;
   cursor: ns-resize;
-}
-.block .output {
-  overflow: scroll;
 }
 .block .resize-handle {
   width: 8px;
