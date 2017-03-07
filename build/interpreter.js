@@ -14,7 +14,7 @@ const ui = require('./renderer.js');
 if (__dirname.endsWith('build')) {
     var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
     python_interpreter.on('close', function (data) {
-        alert("Python processes closed! Try to restart? Error code: " + data);
+        alert("Python processes closed! Probably due to interpreter.py error. Error code: " + data);
     });
     module.exports.python_interpreter = python_interpreter;
 } else {
@@ -266,10 +266,35 @@ function python_declare(block) {
         }
     }
 
+    var python_filter_function_declaration = '';
+    var filter_code = block.filter_clause; // stupid  workaround
+    if (filter_code) {
+        var python_filter_function_name = `_${block.name}_filter_function`;
+
+        // a_ means 'for a_ in a: ...'
+        var map_variables = _.uniq(get_user_identifiers(filter_code).filter(name => _.last(name) == '_' && name !== block.name + '_'));
+
+        if (filter_code.indexOf('return') > -1) {
+            // function
+            if (map_variables.length > 0) {
+                // need arguments
+                python_filter_function_declaration = `def ${python_filter_function_name}(${block.name}_, ${map_variables.join(', ')}):
+  ${filter_code.split('\n').join('\n  ')}`;
+            } else {
+                python_filter_function_declaration = `def ${python_filter_function_name}():
+  ${filter_code.split('\n').join('\n  ')}`;
+            }
+        } else {
+            // an expression with 0 or more variables
+            python_filter_function_declaration = `${python_filter_function_name} = lambda ${block.name}_, ${map_variables.join(', ')}: ${filter_code}`;
+            //                                                                            ^-- filter function can refer to its block's results
+        }
+    }
+
     // a_ means 'for a_ in a: ...'
     var map_variables = _.uniq(get_user_identifiers(code).filter(name => _.last(name) == '_'));
 
-    var python_function_declaration;
+    var python_function_declaration = '';
     var python_function_name = `_${block.name}_function`;
     if (code.indexOf('return') > -1) {
         // function
@@ -286,10 +311,8 @@ function python_declare(block) {
         python_function_declaration = `${python_function_name} = lambda ${map_variables.join(', ')}: ${code}`;
     } else {
         // just an expression, don't declare anything
-        return;
     }
 
-    console.log('declaring python:', python_function_declaration);
     var no_op = function () {};
     var success = function (data) {
         block.error = '';
@@ -302,13 +325,45 @@ function python_declare(block) {
         fail_queue[1] = no_op; // remove callback handling getting the result of this function
 
         block.error = data;
-
         ui.render_error(block);
     };
 
-    success_queue.push(success);
-    fail_queue.push(fail);
-    python_exec(python_function_declaration);
+    var filter_declaraction_success = function (data) {
+        block.error = '';
+        ui.render_error(block);
+    };
+    var filter_declaration_fail = function (data) {
+        if (python_function_declaration) {
+            success_queue[0] = no_op; // remove callback for declaring the non-filter function
+            success_queue[1] = no_op; // remove callback for running the function
+            success_queue[2] = no_op; // remove callback handling getting the result of this function
+            fail_queue[0] = no_op; // remove callback for declaring the non-filter function
+            fail_queue[1] = no_op; // remove callback handling running this function
+            fail_queue[2] = no_op; // remove callback handling getting the result of this function
+        } else {
+            success_queue[0] = no_op;
+            success_queue[1] = no_op;
+            fail_queue[0] = no_op; // remove callback calling 
+            fail_queue[1] = no_op; // remove callback that handles getting value of variable
+        }
+
+        block.error = data;
+        ui.render_error(block);
+    };
+
+    if (python_filter_function_declaration) {
+        success_queue.push(success);
+        fail_queue.push(fail);
+        python_exec(python_filter_function_declaration);
+        console.log('declaring python:', python_filter_function_declaration);
+    }
+
+    if (python_function_declaration) {
+        success_queue.push(success);
+        fail_queue.push(fail);
+        python_exec(python_function_declaration);
+        console.log('declaring python:', python_function_declaration);
+    }
 }
 
 function python_run(block) {
@@ -327,20 +382,33 @@ function python_run(block) {
     }
 
     var python_code;
+    var python_expression;
 
     // a_ means 'for a_ in a: ...'
     var map_variables = _.uniq(get_user_identifiers(code).filter(name => _.last(name) == '_'));
     if (map_variables.length > 0) {
         var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
+
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
-        python_code = `${block.name} = list(starmap(_${block.name}_function, izip(${zip_variables.join(',')})))`;
+        python_expression = `starmap(_${block.name}_function, izip(${zip_variables.join(',')}))`;
     } else if (code.indexOf('return') > -1) {
-        python_code = `${block.name} = _${block.name}_function()`;
+        python_expression = `_${block.name}_function()`;
     } else {
-        python_code = `${block.name} = ${code}`;
+        python_expression = `${code}`;
     }
 
+    if (block.filter_clause) {
+        var filter_map_variables = _.uniq(get_user_identifiers(block.filter_clause).filter(name => _.last(name) == '_' && name !== block.name + '_'));
+        var filter_zip_variables = filter_map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
+        python_expression = `list( starfilter(_${block.name}_filter_function, izip(${filter_zip_variables.join(',')}), ${python_expression}) )`;
+    } else if (python_expression.indexOf('starmap') > -1) {
+        python_expression = `list(${python_expression})`;
+    }
+
+    python_code = `${block.name} = ${python_expression}`;
+
     console.log('running python:', python_code);
+
     var no_op = function () {};
     var success = function (data) {
         block.error = '';
@@ -403,11 +471,15 @@ function change_name(block, name) {
                 }
             } else {
                 test_block.code = replace_python_names(test_block.code, old_name, block.name);
+                if (test_block.filter_clause) {
+                    test_block.filter_clause = replace_python_names(test_block.filter_clause, old_name, block.name);
+                }
             }
             ui.render_code(test_block);
         }
     });
 
+    // @TODO!!!!!!: update with filter clause
     var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) === '_'));
     if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
         var old_function_name = `_${old_name}_function`;
@@ -426,15 +498,14 @@ function change_name(block, name) {
 }
 module.exports.change_name = change_name;
 
-function change_code(block, code) {
-    block.code = code;
+function set_dependencies(block) {
 
     var names = [];
     try {
         if (block.is_string_concat) {
             // @Cleanup @Refactor: move this logic to more central location
             var token_re = /\$\{.+?\}/g; // e.g. ${butts}
-            var tokens = code.match(token_re);
+            var tokens = block.code.match(token_re);
             if (tokens && tokens.length) {
                 var expressions = tokens.map(token => token.replace(/^\$\{/, '').replace(/\}$/, '')); // remove ${ and } from ${butts}, leaving only 'butts'
                 expressions.forEach(expression => {
@@ -452,16 +523,31 @@ function change_code(block, code) {
         return;
     }
 
-    // @Cleanup: detect cyclical dependencies more formally, not just self reference
-    if (_.contains(names, block.name) || _.contains(names, block.name + '_')) {
-        block.error = "Can't refer to self with name \"" + block.name + "\"";
-        ui.render_error(block);
-        return;
+    if (block.filter_clause) {
+        try {
+            get_user_identifiers(block.filter_clause).forEach(function (name) {
+                // don't include self-references even though they're valid in filter clauss
+                if (name !== block.name && name.slice(0, name.length - 1) !== block.name) {
+                    names.push(name);
+                }
+            });
+        } catch (e) {
+            // syntax error in filbert parsing most likely
+            block.error = e;
+            ui.render_error(block);
+            return;
+        }
     }
 
     block.depends_on = blocks.filter(function (test_block) {
         return names.includes(test_block.name) || names.includes(test_block.name + '_');
     });
+}
+
+function change_code(block, code) {
+    block.code = code;
+
+    set_dependencies(block);
 
     python_declare(block);
 
@@ -471,6 +557,8 @@ module.exports.change_code = change_code;
 
 function change_filter_clause(block, code) {
     block.filter_clause = code;
+
+    set_dependencies(block);
 
     python_declare(block);
 

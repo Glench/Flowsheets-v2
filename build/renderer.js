@@ -432,6 +432,8 @@ function create_and_render_block(block, row, column) {
     var filter_codemirror = make_codemirror($filter_clause.get(0), 'True', 'filter_clause_height', interpreter.change_filter_clause);
     $block.append($filter_clause);
 
+    // @TODO: need to add resizer UI for filter clause
+
     // output
     var $output = $('<div class="output">');
     $output.on('scroll', function (evt) {
