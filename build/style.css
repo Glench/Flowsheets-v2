@@ -134,6 +134,7 @@ button#new-import {
 .block .filter_clause {
   border-bottom: 1px solid #999;
   height: 18px;
+  position: relative;
 }
 .block .code .CodeMirror,
 .block .filter_clause .CodeMirror {
@@ -172,11 +173,29 @@ button#new-import {
   padding: 0 3px;
   margin: 0 1px;
   border: 1px solid #ccc;
+  cursor: default;
 }
 .block .code .CodeMirror .flowsheets-reference:hover,
 .block .filter_clause .CodeMirror .flowsheets-reference:hover {
   color: black;
   background-color: yellow;
+}
+.block .code .flowsheets-code-selection,
+.block .filter_clause .flowsheets-code-selection {
+  cursor: default;
+  z-index: 10;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: .5;
+  background-color: #ccc;
+  color: black;
+}
+.block .code .flowsheets-code-selection:hover,
+.block .filter_clause .flowsheets-code-selection:hover {
+  opacity: 1;
 }
 .block .code-resizer {
   position: absolute;

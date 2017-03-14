@@ -16,6 +16,7 @@ class FlowsheetsJSONEncoder(json.JSONEncoder):
                     d[key] = json.dumps(getattr(obj, key, None))
                 except:
                     d[key] = repr(getattr(obj, key, None))
+            d['repr'] = repr(obj)
             return d
 
 def stringify(obj):

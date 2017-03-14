@@ -148,6 +148,7 @@ button#new-import {
     .code, .filter_clause {
         border-bottom: 1px solid #999;
         height: @cell_height - 1px;
+        position: relative;
 
         .CodeMirror {
             &.is_string_concat {
@@ -188,11 +189,32 @@ button#new-import {
                 padding: 0 3px;
                 margin: 0 1px;
                 border: 1px solid #ccc;
+                cursor: default;
 
                 &:hover {
                     color: black;
                     background-color: yellow;
                 }
+            }
+
+        }
+
+        .flowsheets-code-selection {
+            z-index: 10;
+            position: absolute;
+            top: 0;
+            right: 3px;
+            line-height: 1.3;
+            padding: 3px;
+
+            opacity: .5;
+            color: black;
+            cursor: default;
+            font-size: 10px;
+            background-color: white;
+
+            &:hover {
+                opacity: 1;
             }
         }
     }

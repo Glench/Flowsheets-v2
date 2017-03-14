@@ -438,6 +438,7 @@ function python_run(block: Block) {
         var filter_zip_variables = filter_map_variables.map(name => name.slice(0,name.length-1)) // 'a_' => 'a'
         python_expression = `list( starfilter(_${block.name}_filter_function, izip(${filter_zip_variables.join(',')}), ${python_expression}) )`;
     } else if (python_expression.indexOf('starmap') > -1) {
+        // if auto-mapping, make sure to not return iterator and instead return whole list
         python_expression = `list(${python_expression})`;
     }
 

@@ -397,6 +397,24 @@ function create_and_render_block(block, row, column) {
         codemirror.on('blur', function (instance, evt) {
             instance.setSelection({ line: 0, ch: 0 });
         });
+        codemirror.on('cursorActivity', function (instance) {
+            var selection = instance.getSelection();
+            if (selection) {
+                var $code = $(element);
+                $code.find('.flowsheets-code-selection').remove();
+
+                $code.append($('<div class="flowsheets-code-selection">➡️</div>').on('mousedown', function (evt) {
+                    var new_block = interpreter.create_block(null, selection);
+                    create_and_render_block(new_block, ui_block.row, ui_block.column + ui_block.width_in_columns);
+
+                    instance.replaceSelection(new_block.name);
+
+                    interpreter.change_code(block, instance.getValue());
+                }));
+            } else {
+                $(element).find('.flowsheets-code-selection').remove();
+            }
+        });
 
         return codemirror;
     };

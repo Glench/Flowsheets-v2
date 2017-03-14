@@ -47,7 +47,7 @@ class DefaultViz extends React.Component {
                     return
                 }
                 if (_.isArray(this.props.block.output)) {
-                    outputElement.push(React.createElement('input', {value: item, key: `${index}-${item}`}))
+                    outputElement.push(React.createElement('input', {value: _.isObject(item) ? item.repr : item, key: `${index}-${item}`}))
                 } else {
                     outputElement.push(React.createElement('input', {value: ''+index+': '+item}))
                 }
@@ -77,7 +77,7 @@ class DefaultViz extends React.Component {
 module.exports.DefaultViz = DefaultViz;
 
 
-class HTMLViz extends React.Component {
+class RenderedHTMLViz extends React.Component {
     constructor(props:Object) {
         super(props)
     }
@@ -86,8 +86,19 @@ class HTMLViz extends React.Component {
         return React.createElement('div', {dangerouslySetInnerHTML: {__html: this.props.block.output}})
     }
 }
-module.exports.HTMLViz = HTMLViz;
+module.exports.RenderedHTMLViz = RenderedHTMLViz;
 
+
+class TextViz extends React.Component {
+    constructor(props:Object) {
+        super(props)
+    }
+
+    render() {
+        return React.createElement('pre', {style: {margin: 0, lineHeight: 1.38}}, this.props.block.output)
+    }
+}
+module.exports.TextViz = TextViz;
 
 class TextDiffViz extends React.Component {
     constructor(props:Object) {
