@@ -426,7 +426,9 @@ function create_and_render_block(block: Block, row: number, column: number) {
                         {replacedWith: element}
                      )
                 })
-            } catch(e) { }
+            } catch(e) {
+                // almost certainly a python parse error in filbert from get_user_identifiers_with_positions
+            }
         });
         codemirror.on('blur', function(instance, evt) {
             instance.setSelection({line:0, ch:0})

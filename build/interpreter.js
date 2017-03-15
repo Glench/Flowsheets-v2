@@ -73,6 +73,7 @@ function replace_python_names(old_code, to_replace, replace_with) {
     var advance_token = filbert.tokenize(old_code);
     var new_code = [''];
     var token = advance_token();
+    // @TODO @Robustness: keep track of spaces from original string and reinsert them
     while (token.type.type !== 'eof') {
         if (token.value === to_replace) {
             new_code.push(replace_with);
@@ -287,30 +288,20 @@ function python_declare(block) {
         } else {
             // an expression with 0 or more variables
             python_filter_function_declaration = `${python_filter_function_name} = lambda ${block.name}_, ${map_variables.join(', ')}: ${filter_code}`;
-            //                                                                            ^-- filter function can refer to its block's results
+            // ^-- filter function can refer to its own block's results
         }
     }
 
-    // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(code).filter(name => _.last(name) == '_'));
-
     var python_function_declaration = '';
     var python_function_name = `_${block.name}_function`;
+    var argument_names = _.uniq(get_user_identifiers(code)); // can't use Block.depends_on because some identifiers are name e.g. 'a_'
     if (code.indexOf('return') > -1) {
         // function
-        if (map_variables.length > 0) {
-            // need arguments
-            python_function_declaration = `def ${python_function_name}(${map_variables.join(', ')}):
+        python_function_declaration = `def ${python_function_name}(${argument_names}):
   ${code.split('\n').join('\n  ')}`;
-        } else {
-            python_function_declaration = `def ${python_function_name}():
-  ${code.split('\n').join('\n  ')}`;
-        }
-    } else if (map_variables.length > 0) {
-        // lambda
-        python_function_declaration = `${python_function_name} = lambda ${map_variables.join(', ')}: ${code}`;
     } else {
-        // just an expression, don't declare anything
+        // lambda for just an expression
+        python_function_declaration = `${python_function_name} = lambda ${argument_names}: ${code}`;
     }
 
     var no_op = function () {};
@@ -385,16 +376,21 @@ function python_run(block) {
     var python_expression;
 
     // a_ means 'for a_ in a: ...'
-    var map_variables = _.uniq(get_user_identifiers(code).filter(name => _.last(name) == '_'));
-    if (map_variables.length > 0) {
-        var zip_variables = map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
+    var argument_names = _.uniq(get_user_identifiers(code));
+    var has_mapped_variables = _.any(argument_names, name => name.endsWith('_'));
+    if (has_mapped_variables) {
+        var zip_variables = argument_names.map(name => {
+            if (name.endsWith('_')) {
+                return name.slice(0, name.length - 1); // remove trailing '_'
+            }
+            return `_iter_repeat(${name})`; // make value into an iterator
+        });
 
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
         python_expression = `starmap(_${block.name}_function, izip(${zip_variables.join(',')}))`;
-    } else if (code.indexOf('return') > -1) {
-        python_expression = `_${block.name}_function()`;
     } else {
-        python_expression = `${code}`;
+        var argument_names = block.depends_on.map(parent_block => parent_block.name).join(', ');
+        python_expression = `_${block.name}_function(${argument_names})`;
     }
 
     if (block.filter_clause) {

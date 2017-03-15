@@ -1,6 +1,6 @@
 import sys
 import json
-from itertools import izip, starmap, izip_longest
+from itertools import izip, starmap, izip_longest, repeat
 from datetime import datetime
 
 class FlowsheetsJSONEncoder(json.JSONEncoder):
@@ -32,7 +32,13 @@ def starfilter(filter_expression, args_iterable, map_expression_result_iterable)
         if filter_expression(result, *(args or empty)):
             yield result
 
-user_globals = {'stringify': stringify, 'izip': izip, 'starmap': starmap, 'starfilter': starfilter}
+user_globals = {
+    'stringify':    stringify,
+    'izip':         izip,
+    'starmap':      starmap,
+    'starfilter':   starfilter,
+    '_iter_repeat': repeat,
+}
 
 with open(str(datetime.now())+'.txt', 'wb') as log_file:
 
@@ -82,6 +88,6 @@ with open(str(datetime.now())+'.txt', 'wb') as log_file:
                 sys.stderr.flush()
 
             log_file.write(cleaned_payload+'\n')
-            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'stringify', 'izip', 'starmap', 'starfilter')}
+            log_globals = {key: value for key,value in user_globals.iteritems() if key not in ('__builtins__', 'stringify', 'izip', 'starmap', 'starfilter', '_iter_repeat')}
             # log_file.write('current globals: {}\n'.format(log_globals))
             log_file.flush()

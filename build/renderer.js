@@ -392,7 +392,9 @@ function create_and_render_block(block, row, column) {
 
                     instance.markText({ line: position.start_line, ch: position.start_ch }, { line: position.end_line, ch: position.end_ch }, { replacedWith: element });
                 });
-            } catch (e) {}
+            } catch (e) {
+                // almost certainly a python parse error in filbert from get_user_identifiers_with_positions
+            }
         });
         codemirror.on('blur', function (instance, evt) {
             instance.setSelection({ line: 0, ch: 0 });
