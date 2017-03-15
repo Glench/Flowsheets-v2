@@ -410,8 +410,7 @@ function create_and_render_block(block, row, column) {
                     create_and_render_block(new_block, ui_block.row, ui_block.column + ui_block.width_in_columns);
 
                     instance.replaceSelection(new_block.name);
-
-                    interpreter.change_code(block, instance.getValue());
+                    update_func(block, instance.getValue());
                 }));
             } else {
                 $(element).find('.flowsheets-code-selection').remove();
@@ -491,8 +490,9 @@ function render_code(block) {
 }
 module.exports.render_code = render_code;
 
-function render_filter_clause(block) {
-    var $filter_input = $('#block-' + block.name).find('.filter_clause .CodeMirror');
+function render_filter_clause(block, old_name) {
+    var block_html_name = old_name ? old_name : block.name;
+    var $filter_input = $('#block-' + block_html_name).find('.filter_clause .CodeMirror');
     $filter_input.get(0).CodeMirror.setValue(block.filter_clause);
     fade_background_color($filter_input, 1, 'rgba(220,220,220, ');
 }

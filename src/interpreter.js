@@ -92,7 +92,7 @@ function replace_python_names(old_code: string, to_replace: string, replace_with
             new_code.push(replace_with+'_')
             new_code.push('')
         } else {
-            if (!token.value) {
+            if (_.isUndefined(token.value)) {
                 if (token.type.type === 'newline') {
                     // e.g. token = {value: undefined, type: {type: 'newline'}}
                     token.value = '\n'
@@ -499,8 +499,6 @@ function get_python_value(block: Block) {
 
 
 function change_name(block: Block, name: string):string {
-    // @TODO: update for new scheme of all declared functions
-
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
 
@@ -524,14 +522,18 @@ function change_name(block: Block, name: string):string {
 
             } else {
                 test_block.code = replace_python_names(test_block.code, old_name, block.name);
-                ui.render_code(test_block)
+                ui.render_code(test_block);
                 if (test_block.filter_clause) {
                     test_block.filter_clause = replace_python_names(test_block.filter_clause, old_name, block.name);
-                    ui.render_filter_clause(test_block)
+                    ui.render_filter_clause(test_block);
                 }
             }
         }
     })
+    if (block.filter_clause) {
+        block.filter_clause = replace_python_names(block.filter_clause, old_name, block.name)
+        ui.render_filter_clause(block, old_name);
+    }
 
     var old_function_name = `_${old_name}_function`;
     var new_function_name = `_${block.name}_function`;

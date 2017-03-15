@@ -83,7 +83,7 @@ function replace_python_names(old_code, to_replace, replace_with) {
             new_code.push(replace_with + '_');
             new_code.push('');
         } else {
-            if (!token.value) {
+            if (_.isUndefined(token.value)) {
                 if (token.type.type === 'newline') {
                     // e.g. token = {value: undefined, type: {type: 'newline'}}
                     token.value = '\n';
@@ -457,8 +457,6 @@ function get_python_value(block) {
 }
 
 function change_name(block, name) {
-    // @TODO: update for new scheme of all declared functions
-
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
 
@@ -489,6 +487,10 @@ function change_name(block, name) {
             }
         }
     });
+    if (block.filter_clause) {
+        block.filter_clause = replace_python_names(block.filter_clause, old_name, block.name);
+        ui.render_filter_clause(block, old_name);
+    }
 
     var old_function_name = `_${old_name}_function`;
     var new_function_name = `_${block.name}_function`;
