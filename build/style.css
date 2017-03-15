@@ -214,3 +214,24 @@ button#new-import {
   right: -2.66666667px;
   cursor: nwse-resize;
 }
+/*
+
+=== maybe how to fix codemirror styling? ===
+
+.CodeMirror-lines {
+    padding: 0; ?
+}
+
+.CodeMirror-line {
+    padding: 0; ?
+}
+
+.block .code .CodeMirror {
+    remove height 100%?
+}
+
+.scroll {
+    padding-bottom: 0;
+    height: initial?}
+
+*/

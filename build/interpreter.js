@@ -21,8 +21,8 @@ if (__dirname.endsWith('build')) {
     throw "Can't find interpreter.py, __dirname is: " + __dirname;
 }
 
-function get_user_identifiers(python_expression) {
-    var advance_token = filbert.tokenize(python_expression);
+function get_user_identifiers(python_code) {
+    var advance_token = filbert.tokenize(python_code);
     var token = advance_token();
     var names = {};
     while (token.type.type !== 'eof') {
@@ -32,13 +32,14 @@ function get_user_identifiers(python_expression) {
         token = advance_token();
     }
     // remove all references to built-ins
+    var current_names = blocks.map(block => block.name);
     return _.keys(names).filter(key => {
-        return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key);
+        return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key) && (_.contains(current_names, key) || _.contains(current_names, key.slice(0, key.length - 1)));
     });
 }
 
-function get_user_identifiers_with_positions(python_expression) {
-    var advance_token = filbert.tokenize(python_expression, { locations: true });
+function get_user_identifiers_with_positions(python_code) {
+    var advance_token = filbert.tokenize(python_code, { locations: true });
     var token = advance_token();
     var names_and_positions = [];
     while (token.type.type !== 'eof') {
@@ -55,9 +56,9 @@ function get_user_identifiers_with_positions(python_expression) {
         token = advance_token();
     }
     // remove all references to built-ins
+    var current_names = blocks.map(block => block.name);
     return names_and_positions.filter(location => {
         var key = location.name;
-        var current_names = blocks.map(block => block.name);
         return !_.has(filbert.pythonRuntime, key) && !_.has(filbert.pythonRuntime.functions, key) && !_.has(filbert.pythonRuntime.ops, key) && (_.contains(current_names, key) || _.contains(current_names, key.slice(0, key.length - 1)));
         // remove tail _ from name
     });
@@ -295,6 +296,14 @@ function python_declare(block) {
     var python_function_declaration = '';
     var python_function_name = `_${block.name}_function`;
     var argument_names = _.uniq(get_user_identifiers(code)); // can't use Block.depends_on because some identifiers are name e.g. 'a_'
+
+
+    // turn a() into function, _a_function()
+    block.depends_on.forEach(function (parent_block) {
+        var re = new RegExp('\\b(' + parent_block.name + ')\\(', 'g');
+        code = code.replace(re, '_$1_function(');
+    });
+
     if (code.indexOf('return') > -1) {
         // function
         python_function_declaration = `def ${python_function_name}(${argument_names}):
@@ -346,7 +355,7 @@ function python_declare(block) {
         success_queue.push(success);
         fail_queue.push(fail);
         python_exec(python_filter_function_declaration);
-        console.log('declaring python:', python_filter_function_declaration);
+        console.log('declaring python filter:', python_filter_function_declaration);
     }
 
     if (python_function_declaration) {
@@ -393,6 +402,7 @@ function python_run(block) {
         python_expression = `_${block.name}_function(${argument_names})`;
     }
 
+    // @TODO @Robustness: should be able to have filter clause using arguments (a_, b) - mapped and non-mapped, right now ignoring non-mapped arguments
     if (block.filter_clause) {
         var filter_map_variables = _.uniq(get_user_identifiers(block.filter_clause).filter(name => _.last(name) == '_' && name !== block.name + '_'));
         var filter_zip_variables = filter_map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
@@ -447,6 +457,8 @@ function get_python_value(block) {
 }
 
 function change_name(block, name) {
+    // @TODO: update for new scheme of all declared functions
+
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
 
@@ -478,20 +490,15 @@ function change_name(block, name) {
         }
     });
 
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) === '_'));
-    if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
-        var old_function_name = `_${old_name}_function`;
-        var new_function_name = `_${block.name}_function`;
-        var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name}`;
-    } else {
-        var python_code = `${block.name} = ${old_name}; del ${old_name}`;
-    }
+    var old_function_name = `_${old_name}_function`;
+    var new_function_name = `_${block.name}_function`;
+    var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name};`;
 
     if (block.filter_clause) {
         var old_filter_function_name = `_${old_name}_filter_function`;
         var new_filter_function_name = `_${block.name}_filter_function`;
 
-        python_code = `${new_filter_function_name} = ${old_filter_function_name}; del ${old_filter_function_name}; ${python_code}`;
+        python_code += `${new_filter_function_name} = ${old_filter_function_name}; del ${old_filter_function_name}; ${python_code}`;
     }
     console.log('executing python in `change_name`:', python_code);
     var callback = () => {};

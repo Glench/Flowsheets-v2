@@ -24,8 +24,8 @@ if (__dirname.endsWith('build')) {
 }
 
 
-function get_user_identifiers(python_expression: string):string[] {
-    var advance_token = filbert.tokenize(python_expression)
+function get_user_identifiers(python_code: string):string[] {
+    var advance_token = filbert.tokenize(python_code)
     var token = advance_token();
     var names = {};
     while (token.type.type !== 'eof') {
@@ -35,15 +35,17 @@ function get_user_identifiers(python_expression: string):string[] {
         token = advance_token();
     }
     // remove all references to built-ins
+    var current_names = blocks.map(block => block.name)
     return _.keys(names).filter(key => {
         return !_.has(filbert.pythonRuntime, key) &&
                !_.has(filbert.pythonRuntime.functions, key) &&
-               !_.has(filbert.pythonRuntime.ops, key);
+               !_.has(filbert.pythonRuntime.ops, key) &&
+               (_.contains(current_names, key) || _.contains(current_names, key.slice(0, key.length-1)));
     });
 }
 
-function get_user_identifiers_with_positions(python_expression: string):Object[] {
-    var advance_token = filbert.tokenize(python_expression, {locations: true})
+function get_user_identifiers_with_positions(python_code: string):Object[] {
+    var advance_token = filbert.tokenize(python_code, {locations: true})
     var token = advance_token();
     var names_and_positions = [];
     while (token.type.type !== 'eof') {
@@ -60,9 +62,9 @@ function get_user_identifiers_with_positions(python_expression: string):Object[]
         token = advance_token();
     }
     // remove all references to built-ins
+    var current_names = blocks.map(block => block.name)
     return names_and_positions.filter(location => {
         var key = location.name;
-        var current_names = blocks.map(block => block.name)
         return !_.has(filbert.pythonRuntime, key) &&
                !_.has(filbert.pythonRuntime.functions, key) &&
                !_.has(filbert.pythonRuntime.ops, key) &&
@@ -297,6 +299,8 @@ function python_declare(block: Block) {
     }
 
 
+
+
     var python_filter_function_declaration: string = '';
     var filter_code = block.filter_clause; // stupid @flow workaround
     if (filter_code) {
@@ -327,6 +331,15 @@ function python_declare(block: Block) {
     var python_function_declaration: string = '';
     var python_function_name = `_${block.name}_function`;
     var argument_names = _.uniq(get_user_identifiers(code)); // can't use Block.depends_on because some identifiers are name e.g. 'a_'
+
+
+    // turn a() into function, _a_function()
+    block.depends_on.forEach(function(parent_block) {
+        var re = new RegExp('\\b('+parent_block.name+')\\(', 'g');
+        code = code.replace(re, '_$1_function(')
+    })
+
+
     if (code.indexOf('return') > -1) {
         // function
         python_function_declaration = `def ${python_function_name}(${argument_names}):
@@ -335,6 +348,7 @@ function python_declare(block: Block) {
         // lambda for just an expression
         python_function_declaration = `${python_function_name} = lambda ${argument_names}: ${code}`;
     }
+
 
 
 
@@ -381,7 +395,7 @@ function python_declare(block: Block) {
         success_queue.push(success);
         fail_queue.push(fail);
         python_exec(python_filter_function_declaration);
-        console.log('declaring python:', python_filter_function_declaration)
+        console.log('declaring python filter:', python_filter_function_declaration)
     }
 
 
@@ -485,6 +499,8 @@ function get_python_value(block: Block) {
 
 
 function change_name(block: Block, name: string):string {
+    // @TODO: update for new scheme of all declared functions
+
     var old_name = block.name;
     block.name = generate_unique_name_from_name(name);
 
@@ -517,20 +533,15 @@ function change_name(block: Block, name: string):string {
         }
     })
 
-    var map_variables = _.uniq(get_user_identifiers(block.code).filter(name => _.last(name) === '_'))
-    if (block.code.indexOf('return') > -1 || map_variables.length > 0) {
-        var old_function_name = `_${old_name}_function`;
-        var new_function_name = `_${block.name}_function`;
-        var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name}`;
-    } else {
-        var python_code = `${block.name} = ${old_name}; del ${old_name}`;
-    }
+    var old_function_name = `_${old_name}_function`;
+    var new_function_name = `_${block.name}_function`;
+    var python_code = `${block.name} = ${old_name}; del ${old_name}; ${new_function_name} = ${old_function_name}; del ${old_function_name};`;
 
     if (block.filter_clause) {
         var old_filter_function_name = `_${old_name}_filter_function`;
         var new_filter_function_name = `_${block.name}_filter_function`;
 
-        python_code = `${new_filter_function_name} = ${old_filter_function_name}; del ${old_filter_function_name}; ${python_code}`;
+        python_code += `${new_filter_function_name} = ${old_filter_function_name}; del ${old_filter_function_name}; ${python_code}`;
     }
     console.log('executing python in `change_name`:', python_code);
     var callback = () => {}; 
