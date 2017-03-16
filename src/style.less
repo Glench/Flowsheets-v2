@@ -128,7 +128,12 @@ button#new-import {
 
     }
     .output {
-        overflow: scroll;
+        overflow: hidden;
+
+        & > * {
+            height: 100%;
+            overflow: scroll;
+        }
 
 
         /*

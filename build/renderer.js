@@ -5,6 +5,12 @@ const ReactDOM = require('react-dom');
 const CodeMirror = require('codemirror');
 require('codemirror/mode/python/python');
 
+const rows = 100;
+const columns = 30;
+const cell_width = 88; // including borders
+const cell_height = 19; // including borders
+module.exports.cell_height = cell_height;
+
 // @Cleanup: probably move to utils at some point
 function clamp(num, min, max) {
     if (num < min) {
@@ -40,12 +46,6 @@ class UIBlock {
     // in # of rows, not pixels
 };
 module.exports.UIBlock = UIBlock;
-
-const rows = 100;
-const columns = 30;
-const cell_width = 88; // including borders
-const cell_height = 19; // including borders
-module.exports.cell_height = cell_height;
 
 class Move_Drag {
 
@@ -448,17 +448,6 @@ function create_and_render_block(block, row, column) {
 
     // output
     var $output = $('<div class="output">');
-    $output.on('scroll', function (evt) {
-        var scroll_top = evt.target.scrollTop;
-        interpreter.blocks.forEach(function (test_block) {
-            if (test_block.depends_on.includes(block)) {
-                $('#block-' + test_block.name).find('.output').scrollTop(scroll_top);
-            }
-        });
-    });
-    $output.append($('<input>').attr('value', block.output).on('click', function (evt) {
-        evt.stopPropagation();
-    }));
     $block.append($output);
 
     // resize handle

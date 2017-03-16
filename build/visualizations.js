@@ -3,6 +3,7 @@ const React = require('react');
 const $ = require('jquery');
 const diff = require('diff');
 
+const interpreter = require('./interpreter');
 const cell_height = require('./renderer').cell_height;
 
 function fade_background_color($element, alpha, color) {
@@ -20,8 +21,13 @@ function fade_background_color($element, alpha, color) {
 }
 
 class DefaultViz extends React.Component {
+
     constructor(props) {
         super(props);
+        this.scroll = this.scroll.bind(this);
+
+        this.state = { render_start: 0 };
+        this.should_flash = true;
     }
 
     componentDidMount() {
@@ -29,7 +35,11 @@ class DefaultViz extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        this.flash_yellow();
+        if (this.should_flash) {
+            this.flash_yellow();
+        } else {
+            this.should_flash = true;
+        }
     }
 
     flash_yellow() {
@@ -37,23 +47,52 @@ class DefaultViz extends React.Component {
         fade_background_color($inputs, 1, 'rgba(255,255,0, ');
     }
 
+    scroll(evt) {
+        if (!_.isObject(this.props.block.output) || !_.isArray(this.props.block.output)) {
+            return;
+        }
+
+        // scroll other blocks' output if they depend on this block
+        interpreter.blocks.forEach(test_block => {
+            if (test_block.depends_on.includes(this.props.block)) {
+                $('#block-' + test_block.name).find('.output > *').scrollTop(this.refs.scrollable.scrollTop);
+            }
+        });
+
+        this.should_flash = false;
+        this.setState({ render_start: Math.floor(this.refs.scrollable.scrollTop / cell_height) });
+    }
+
     render() {
+        var length = 1;
         if (_.isArray(this.props.block.output) || _.isObject(this.props.block.output)) {
-            var outputElement = [];
+            length = _.size(this.props.block.output);
+            var outputElement = []; //  hack;
+
+            outputElement.push(React.createElement('div', { key: 'scroll-buffer-start', style: { height: this.state.render_start * cell_height } }));
+
             var i = 0;
             _.each(this.props.block.output, (item, index, output) => {
-                if (i >= 40) {
+                if (i < this.state.render_start || i > this.state.render_start + this.props.ui_block.output_height) {
+                    i += 1;
                     return;
                 }
+
                 if (_.isArray(this.props.block.output)) {
                     outputElement.push(React.createElement('input', { value: _.isObject(item) ? item.repr : item, key: `${index}-${item}` }));
                 } else {
-                    outputElement.push(React.createElement('input', { value: '' + index + ': ' + item }));
+                    outputElement.push(React.createElement('input', { value: '' + JSON.stringify(index) + ': ' + JSON.stringify(item) }));
                 }
                 i += 1;
             });
 
-            var text = 'Length: ' + _.size(this.props.block.output);
+            outputElement.push(React.createElement('div', {
+                key: 'scroll-buffer-end',
+                style: {
+                    height: (length - (this.state.render_start + this.props.ui_block.output_height)) * cell_height
+                }
+            }));
+
             outputElement.push(React.createElement('div', { key: 'length', style: {
                     position: 'absolute',
                     right: 0,
@@ -64,11 +103,11 @@ class DefaultViz extends React.Component {
                     backgroundColor: '#eee',
                     fontFamily: 'Clear Sans, Helvetica Neue, sans-serif',
                     fontWeight: 'bold'
-                } }, text));
+                } }, 'Length: ' + length));
         } else {
-            var outputElement = React.createElement('input', { value: this.props.block.output });
+            var outputElement = React.createElement('input', { value: JSON.stringify(this.props.block.output) });
         }
-        return React.createElement('div', { ref: 'container' }, outputElement);
+        return React.createElement('div', { ref: 'scrollable', onScroll: this.scroll }, React.createElement('div', { ref: 'container', style: { height: cell_height * length } }, outputElement));
     }
 }
 module.exports.DefaultViz = DefaultViz;

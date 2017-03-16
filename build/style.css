@@ -117,7 +117,7 @@ button#new-import {
   padding: 0 3px 2px 3px;
 }
 .block .output {
-  overflow: scroll;
+  overflow: hidden;
   /*
         &::-webkit-scrollbar {
             -webkit-appearance: none;
@@ -129,6 +129,10 @@ button#new-import {
             -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
         }
         */
+}
+.block .output > * {
+  height: 100%;
+  overflow: scroll;
 }
 .block .code,
 .block .filter_clause {
