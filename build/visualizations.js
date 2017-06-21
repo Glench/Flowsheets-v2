@@ -88,8 +88,6 @@ class DefaultViz extends React.Component {
                 }
 
                 if (_.isArray(this.props.block.output)) {
-                    console.log(_.isObject(item) ? item.repr : item);
-
                     outputElement.push(React.createElement('input', { style: inputStyle, value: !_.isUndefined(item.repr) ? item.repr : item, key: `${index}-${item}` }));
                 } else {
                     outputElement.push(React.createElement('input', { style: inputStyle, value: '' + JSON.stringify(index) + ': ' + JSON.stringify(item) }));

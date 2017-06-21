@@ -449,7 +449,7 @@ function get_python_value(block) {
         ui.render_output(block);
     });
     fail_queue.push(function (data) {
-        block.error = `error in evaling Block ${block.name}! ${data}`;
+        block.error = `${data}`;
         ui.render_error(block);
     });
     // console.log('getting python value:', block.name)

@@ -84,7 +84,7 @@ with open(str(datetime.now())+'.txt', 'wb') as log_file:
 
 
             except Exception as e:
-                sys.stderr.write('Error while running payload "{}": {}\n'.format(payload, e))
+                sys.stderr.write('{}\n'.format(e))
                 sys.stderr.flush()
 
             log_file.write(cleaned_payload+'\n')
