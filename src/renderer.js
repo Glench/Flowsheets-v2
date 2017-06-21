@@ -6,6 +6,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const CodeMirror = require('codemirror');
 require('codemirror/mode/python/python');
+require('codemirror/mode/javascript/javascript');
 
 
 const rows = 100
@@ -95,6 +96,7 @@ var resize_code_drag: ?Resize_Code_Drag = null;
 
 function initialize() {
     initialize_grid();
+    initialize_sidebar();
 
     $('#new-import').on('click', function(evt) {
         create_and_render_import();
@@ -186,6 +188,58 @@ function initialize_grid() {
             resize(resize_code_drag.ui_block)
         }
     });
+}
+
+function initialize_sidebar() {
+    var $visualization_editor = $('<div class="visualization_editor">');
+
+    var code = `class CustomViz extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  flash() {
+    this.refs.container.style.backgroundColor = 'yellow';
+    setTimeout(()=> this.refs.container.style.backgroundColor = 'transparent', 300);
+  }
+  componentDidUpdate(props) {
+    this.flash();
+  }
+  componentDidMount() {
+    this.flash();
+  }
+  render() {
+    return React.createElement('div', {ref: 'container'}, this.props.block.output)
+  }
+}`
+
+    var codemirror = CodeMirror($visualization_editor.get(0), {
+        value: code,
+        mode: 'javascript',
+        tabSize: 2,
+        extraKeys: {
+            'Ctrl-Enter': function(instance:CodeMirror) {
+                var old_CustomViz = visualizations.CustomViz;
+                try {
+
+                    var CustomViz = eval(instance.getValue());
+                    $visualization_editor.css({backgroundColor: 'white'})
+                } catch(e) {
+                    $visualization_editor.css({backgroundColor: '#ffa9a9'})
+                    return;
+                }
+                visualizations.CustomViz = CustomViz;    
+                ui_blocks.forEach(function(ui_block: UIBlock) {
+                    if (ui_block.visualization && ui_block.visualization === old_CustomViz) {
+                        ui_block.visualization = CustomViz;
+                        render_output(ui_block.block);
+                    }
+                })
+            }
+        }
+    });
+
+
+    $('#sidebar').append($visualization_editor);
 }
 
 function create_and_render_import() {
@@ -347,7 +401,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
             autofocus: true,
             tabSize: 2,
             extraKeys: {
-                'Enter': function(instance) {
+                'Enter': function(instance:CodeMirror) {
                     var code = instance.getValue()
                     if (!_.includes(code, '\n')) {
                         // if user presses enter when no newlines, run the code, otherwise put in newline
@@ -361,7 +415,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
                         instance.replaceSelection('\n')
                     }
                 },
-                'Ctrl-Enter': function(instance) {
+                'Ctrl-Enter': function(instance:CodeMirror) {
                     var code = instance.getValue()
                     if (_.includes(code, '\n')) {
                         // if user presses ctrl-enter when there are newlines, run the code
@@ -375,7 +429,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
                         instance.replaceSelection('\n')
                     }
                 },
-                'Tab': function(instance) {
+                'Tab': function(instance:CodeMirror) {
                     var current_place = instance.getCursor();
                     var current_line = instance.getLine(current_place.line);
                     if (current_place.ch == current_line.length && !current_line.match(/^\s*$/)) {
@@ -388,7 +442,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
             }
         });
         codemirror.setSelection({line: 0, ch: 0}, {line: Infinity, ch: Infinity}); // highlight all code
-        codemirror.on('change', function(instance) {
+        codemirror.on('change', function(instance:CodeMirror) {
             // resize block automatically
             if (ui_block.should_auto_resize) {
                 var code = instance.getValue();
@@ -433,10 +487,10 @@ function create_and_render_block(block: Block, row: number, column: number) {
                 // almost certainly a python parse error in filbert from get_user_identifiers_with_positions
             }
         });
-        codemirror.on('blur', function(instance, evt) {
+        codemirror.on('blur', function(instance:CodeMirror, evt) {
             instance.setSelection({line:0, ch:0})
         });
-        codemirror.on('cursorActivity', function(instance) {
+        codemirror.on('cursorActivity', function(instance:CodeMirror) {
             var selection = instance.getSelection();
             if (selection) {
                 var $code = $(element);
@@ -558,7 +612,7 @@ function render_output(block: Block) {
 
     if (ui_block.should_auto_resize) {
         if (_.isArray(block.output) && _.isObject(block.output)) {
-            ui_block.output_height = clamp(_.size(block.output), 1, 40)
+            ui_block.output_height = clamp(_.size(block.output), 1, 30)
         } else {
             ui_block.output_height = 1;
         }

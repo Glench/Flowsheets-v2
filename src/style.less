@@ -108,24 +108,21 @@ button#new-import {
         color: white;
     }
 
-    .output input {
-        background-color: rgba(255,255,255,.6);
-    }
-
     .name, .code, .filter_clause, .output {
         height: @cell_height;
         overflow: scroll;
         background-color: rgba(255,255,255,.6);
 
-        input {
-            height: @cell_height - 2px;
+        // TODO: remove and put in default viz
 
-            display: block;
-            width: 100% - 1%;
-            border: 0;
-            padding: 0 3px 2px 3px;
-        }
+    }
+    .name input, .code input, .filter_clause input {
+        height: @cell_height - 2px;
 
+        display: block;
+        width: 100% - 1%;
+        border: 0;
+        padding: 0 3px 2px 3px;
     }
     .output {
         overflow: hidden;
@@ -248,6 +245,23 @@ button#new-import {
         cursor: nwse-resize;
     }
 }
+
+/*
+#sidebar {
+    width: 700px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    border: 2px solid #ccc;
+    background-color: white;
+
+    .CodeMirror {
+        background-color: transparent;
+        height: 100%;
+    }
+}
+*/
 
 /*
 

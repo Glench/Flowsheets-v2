@@ -4,6 +4,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const CodeMirror = require('codemirror');
 require('codemirror/mode/python/python');
+require('codemirror/mode/javascript/javascript');
 
 const rows = 100;
 const columns = 30;
@@ -66,6 +67,7 @@ var resize_code_drag = null;
 
 function initialize() {
     initialize_grid();
+    initialize_sidebar();
 
     $('#new-import').on('click', function (evt) {
         create_and_render_import();
@@ -156,6 +158,57 @@ function initialize_grid() {
             resize(resize_code_drag.ui_block);
         }
     });
+}
+
+function initialize_sidebar() {
+    var $visualization_editor = $('<div class="visualization_editor">');
+
+    var code = `class CustomViz extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  flash() {
+    this.refs.container.style.backgroundColor = 'yellow';
+    setTimeout(()=> this.refs.container.style.backgroundColor = 'transparent', 300);
+  }
+  componentDidUpdate(props) {
+    this.flash();
+  }
+  componentDidMount() {
+    this.flash();
+  }
+  render() {
+    return React.createElement('div', {ref: 'container'}, this.props.block.output)
+  }
+}`;
+
+    var codemirror = CodeMirror($visualization_editor.get(0), {
+        value: code,
+        mode: 'javascript',
+        tabSize: 2,
+        extraKeys: {
+            'Ctrl-Enter': function (instance) {
+                var old_CustomViz = visualizations.CustomViz;
+                try {
+
+                    var CustomViz = eval(instance.getValue());
+                    $visualization_editor.css({ backgroundColor: 'white' });
+                } catch (e) {
+                    $visualization_editor.css({ backgroundColor: '#ffa9a9' });
+                    return;
+                }
+                visualizations.CustomViz = CustomViz;
+                ui_blocks.forEach(function (ui_block) {
+                    if (ui_block.visualization && ui_block.visualization === old_CustomViz) {
+                        ui_block.visualization = CustomViz;
+                        render_output(ui_block.block);
+                    }
+                });
+            }
+        }
+    });
+
+    $('#sidebar').append($visualization_editor);
 }
 
 function create_and_render_import() {
@@ -518,7 +571,7 @@ function render_output(block) {
 
     if (ui_block.should_auto_resize) {
         if (_.isArray(block.output) && _.isObject(block.output)) {
-            ui_block.output_height = clamp(_.size(block.output), 1, 40);
+            ui_block.output_height = clamp(_.size(block.output), 1, 30);
         } else {
             ui_block.output_height = 1;
         }

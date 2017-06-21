@@ -95,9 +95,6 @@ button#new-import {
   background-color: #000;
   color: white;
 }
-.block .output input {
-  background-color: rgba(255, 255, 255, 0.6);
-}
 .block .name,
 .block .code,
 .block .filter_clause,
@@ -108,8 +105,7 @@ button#new-import {
 }
 .block .name input,
 .block .code input,
-.block .filter_clause input,
-.block .output input {
+.block .filter_clause input {
   height: 17px;
   display: block;
   width: 99%;
@@ -218,6 +214,22 @@ button#new-import {
   right: -2.66666667px;
   cursor: nwse-resize;
 }
+/*
+#sidebar {
+    width: 700px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    border: 2px solid #ccc;
+    background-color: white;
+
+    .CodeMirror {
+        background-color: transparent;
+        height: 100%;
+    }
+}
+*/
 /*
 
 === maybe how to fix codemirror styling? ===

@@ -288,7 +288,7 @@ function python_declare(block) {
             }
         } else {
             // an expression with 0 or more variables
-            python_filter_function_declaration = `${python_filter_function_name} = lambda ${block.name}_, ${map_variables.join(', ')}: ${filter_code}`;
+            python_filter_function_declaration = `${python_filter_function_name} = lambda ${block.name}_, ${map_variables.join(', ')}: (${filter_code})`;
             // ^-- filter function can refer to its own block's results
         }
     }
@@ -310,7 +310,7 @@ function python_declare(block) {
   ${code.split('\n').join('\n  ')}`;
     } else {
         // lambda for just an expression
-        python_function_declaration = `${python_function_name} = lambda ${argument_names}: ${code}`;
+        python_function_declaration = `${python_function_name} = lambda ${argument_names}: (${code})`;
     }
 
     var no_op = function () {};

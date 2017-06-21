@@ -48,7 +48,7 @@ class DefaultViz extends React.Component {
     }
 
     scroll(evt) {
-        if (!_.isObject(this.props.block.output) || !_.isArray(this.props.block.output)) {
+        if (!_.isObject(this.props.block.output) || !_.isArray(this.props.block.output) || this.props.block.error) {
             return;
         }
 
@@ -65,6 +65,15 @@ class DefaultViz extends React.Component {
 
     render() {
         var length = 1;
+
+        var inputStyle = {
+            height: cell_height - 2,
+            display: 'block',
+            width: '99%',
+            border: 0,
+            padding: '0 3px 2px 3px'
+        };
+
         if (_.isArray(this.props.block.output) || _.isObject(this.props.block.output)) {
             length = _.size(this.props.block.output);
             var outputElement = []; //  hack;
@@ -79,9 +88,11 @@ class DefaultViz extends React.Component {
                 }
 
                 if (_.isArray(this.props.block.output)) {
-                    outputElement.push(React.createElement('input', { value: _.isObject(item) ? item.repr : item, key: `${index}-${item}` }));
+                    console.log(_.isObject(item) ? item.repr : item);
+
+                    outputElement.push(React.createElement('input', { style: inputStyle, value: !_.isUndefined(item.repr) ? item.repr : item, key: `${index}-${item}` }));
                 } else {
-                    outputElement.push(React.createElement('input', { value: '' + JSON.stringify(index) + ': ' + JSON.stringify(item) }));
+                    outputElement.push(React.createElement('input', { style: inputStyle, value: '' + JSON.stringify(index) + ': ' + JSON.stringify(item) }));
                 }
                 i += 1;
             });
@@ -105,7 +116,7 @@ class DefaultViz extends React.Component {
                     fontWeight: 'bold'
                 } }, 'Length: ' + length));
         } else {
-            var outputElement = React.createElement('input', { value: JSON.stringify(this.props.block.output) });
+            var outputElement = React.createElement('input', { style: inputStyle, value: JSON.stringify(this.props.block.output) });
         }
         return React.createElement('div', { ref: 'scrollable', onScroll: this.scroll }, React.createElement('div', { ref: 'container', style: { height: cell_height * length } }, outputElement));
     }
@@ -168,4 +179,15 @@ class RawJSONViz extends React.Component {
     render() {
         return React.createElement('pre', { style: { margin: 0, lineHeight: 1.38 } }, JSON.stringify(this.props.block.output, null, '    '));
     }
-}module.exports.RawJSONViz = RawJSONViz;
+}
+module.exports.RawJSONViz = RawJSONViz;
+
+class CustomViz extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        return React.createElement('div', null, this.props.block.output);
+    }
+}
+module.exports.CustomViz = CustomViz;
