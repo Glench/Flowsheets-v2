@@ -231,6 +231,7 @@ class Block {
     depends_on: Block[];
     code: string;
     filter_clause: ?string;
+    sort_clause: ?string;
     is_string_concat: boolean;
     output: any; //JSONType;
     error: ?string;
@@ -624,6 +625,17 @@ function change_filter_clause(block: Block, code: string) {
 }
 module.exports.change_filter_clause = change_filter_clause;
 
+function change_sort_clause(block: Block, code: string) {
+    block.sort_clause = code; 
+
+    set_dependencies(block);
+
+    python_declare(block);
+
+    recompute_this_and_dependent_blocks(block);
+}
+module.exports.change_sort_clause = change_sort_clause;
+
 function remove_filter_clause(block: Block) {
     block.filter_clause = null;
 
@@ -642,6 +654,11 @@ function remove_filter_clause(block: Block) {
     recompute_this_and_dependent_blocks(block);
 }
 module.exports.remove_filter_clause = remove_filter_clause;
+
+function remove_sort_clause(block: Block) {
+    // @TODO
+}
+module.exports.remove_sort_clause = remove_sort_clause;
 
 function delete_(block_to_delete: Block) {
     throw 'Need to delete block from interpreter'

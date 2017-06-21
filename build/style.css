@@ -98,6 +98,7 @@ button#new-import {
 .block .name,
 .block .code,
 .block .filter_clause,
+.block .sort_clause,
 .block .output {
   height: 19px;
   overflow: scroll;
@@ -105,7 +106,8 @@ button#new-import {
 }
 .block .name input,
 .block .code input,
-.block .filter_clause input {
+.block .filter_clause input,
+.block .sort_clause input {
   height: 17px;
   display: block;
   width: 99%;
@@ -131,13 +133,15 @@ button#new-import {
   overflow: scroll;
 }
 .block .code,
-.block .filter_clause {
+.block .filter_clause,
+.block .sort_clause {
   border-bottom: 1px solid #999;
   height: 18px;
   position: relative;
 }
 .block .code .CodeMirror,
-.block .filter_clause .CodeMirror {
+.block .filter_clause .CodeMirror,
+.block .sort_clause .CodeMirror {
   height: 100%;
   font-family: "Menlo", "Andale Mono", monospace;
   font-size: 12px;
@@ -145,12 +149,14 @@ button#new-import {
   background-color: white;
 }
 .block .code .CodeMirror.is_string_concat,
-.block .filter_clause .CodeMirror.is_string_concat {
+.block .filter_clause .CodeMirror.is_string_concat,
+.block .sort_clause .CodeMirror.is_string_concat {
   background-color: #ccc;
   font-style: italic;
 }
 .block .code .CodeMirror.is_string_concat:before,
-.block .filter_clause .CodeMirror.is_string_concat:before {
+.block .filter_clause .CodeMirror.is_string_concat:before,
+.block .sort_clause .CodeMirror.is_string_concat:before {
   content: '”';
   position: absolute;
   font-size: 40px;
@@ -161,11 +167,13 @@ button#new-import {
   right: 5px;
 }
 .block .code .CodeMirror.is_string_concat .flowsheets-reference,
-.block .filter_clause .CodeMirror.is_string_concat .flowsheets-reference {
+.block .filter_clause .CodeMirror.is_string_concat .flowsheets-reference,
+.block .sort_clause .CodeMirror.is_string_concat .flowsheets-reference {
   border: 1px solid #ddd;
 }
 .block .code .CodeMirror .flowsheets-reference,
-.block .filter_clause .CodeMirror .flowsheets-reference {
+.block .filter_clause .CodeMirror .flowsheets-reference,
+.block .sort_clause .CodeMirror .flowsheets-reference {
   font-family: "Helvetica Neue", Helvetica, sans-serif;
   background-color: #000;
   color: white;
@@ -176,12 +184,14 @@ button#new-import {
   cursor: default;
 }
 .block .code .CodeMirror .flowsheets-reference:hover,
-.block .filter_clause .CodeMirror .flowsheets-reference:hover {
+.block .filter_clause .CodeMirror .flowsheets-reference:hover,
+.block .sort_clause .CodeMirror .flowsheets-reference:hover {
   color: black;
   background-color: yellow;
 }
 .block .code .flowsheets-code-selection,
-.block .filter_clause .flowsheets-code-selection {
+.block .filter_clause .flowsheets-code-selection,
+.block .sort_clause .flowsheets-code-selection {
   z-index: 10;
   position: absolute;
   top: 0;
@@ -195,7 +205,8 @@ button#new-import {
   background-color: white;
 }
 .block .code .flowsheets-code-selection:hover,
-.block .filter_clause .flowsheets-code-selection:hover {
+.block .filter_clause .flowsheets-code-selection:hover,
+.block .sort_clause .flowsheets-code-selection:hover {
   opacity: 1;
 }
 .block .code-resizer {

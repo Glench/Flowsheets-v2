@@ -108,7 +108,10 @@ button#new-import {
         color: white;
     }
 
-    .name, .code, .filter_clause, .output {
+    .name, .code,
+    .filter_clause,
+    .sort_clause,
+    .output {
         height: @cell_height;
         overflow: scroll;
         background-color: rgba(255,255,255,.6);
@@ -116,7 +119,10 @@ button#new-import {
         // TODO: remove and put in default viz
 
     }
-    .name input, .code input, .filter_clause input {
+    .name input,
+    .code input,
+    .filter_clause input,
+    .sort_clause input {
         height: @cell_height - 2px;
 
         display: block;
@@ -147,7 +153,7 @@ button#new-import {
     }
 
 
-    .code, .filter_clause {
+    .code, .filter_clause, .sort_clause {
         border-bottom: 1px solid #999;
         height: @cell_height - 1px;
         position: relative;

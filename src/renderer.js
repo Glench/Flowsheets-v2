@@ -44,6 +44,7 @@ class UIBlock {
     name_height: number; // in # of rows, not pixels
     code_height: number; // in # of rows, not pixels
     filter_clause_height: number; // in # of rows, not pixels
+    sort_clause_height: number; // in # of rows, not pixels
     output_height: number; // in # of rows, not pixels
 
     block: Block;
@@ -331,6 +332,28 @@ function create_and_render_block(block: Block, row: number, column: number) {
         });
         $menu.append($filter);
 
+        var text = block.sort_clause ? 'Remove Sort' : 'Add Sort (todo)';
+        var $sort = $('<li>').text(text).on('click', function(evt) {
+            $block.find('.menu, .submenu').remove();
+            if (block.sort_clause) {
+                interpreter.remove_sort_clause(block);
+
+                $block.find('.sort_clause').hide();
+                ui_block.sort_clause_height = 0;
+                resize(ui_block);
+
+                return
+            }
+            var cm = $block.find('.sort_clause').show().find('.CodeMirror').get(0).CodeMirror;
+            cm.refresh();
+            cm.focus();
+            block.sort_clause = block.name + '_';
+            ui_block.sort_clause_height = 1;
+
+            resize(ui_block);
+        });
+        $menu.append($sort);
+
         var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function(evt) {
             $block.find('.submenu').remove(); // remove old ones if they're still around
 
@@ -539,6 +562,11 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
     // @TODO: need to add resizer UI for filter clause
 
+    // sort clause
+    var $sort_clause = $('<div class="sort_clause">').hide();
+    var sort_codemirror = make_codemirror($sort_clause.get(0), block.name+'_', 'sort_clause_height', interpreter.change_sort_clause);
+    $block.append($sort_clause);
+
     // output
     var $output = $('<div class="output">');
     $block.append($output)
@@ -599,11 +627,12 @@ function resize(ui_block: UIBlock) {
         top: ui_block.row*cell_height + 1,
         left: ui_block.column*cell_width + 1,
         width: ui_block.width_in_columns*cell_width - 1,
-        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.filter_clause_height+ui_block.output_height) - 1,
+        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.filter_clause_height+ui_block.sort_clause_height+ui_block.output_height) - 1,
     })
 
     $block.find('.code').css('height', cell_height*ui_block.code_height - 1);
     $block.find('.filter_clause').css('height', cell_height*ui_block.filter_clause_height - 1);
+    $block.find('.sort_clause').css('height', cell_height*ui_block.sort_clause_height - 1);
     $block.find('.output').css('height', cell_height*ui_block.output_height - 2);
 }
 
