@@ -58,6 +58,7 @@ class UIBlock {
         this.name_height = 1;
         this.code_height = 1;
         this.filter_clause_height = 0;
+        this.sort_clause_height = 0;
         this.output_height = 1;
     }
 };
