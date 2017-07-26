@@ -285,6 +285,8 @@ module.exports.python_import = python_import;
 // a.split('\n')
 // 'itunes:duration' in b_
 
+// (want to be able to refer to "self", e.g. b)
+
 function python_declare(block: Block) {
     var code = block.code;
     if (block.is_string_concat) {
@@ -440,7 +442,7 @@ function python_run(block: Block) {
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
         python_expression = `starmap(_${block.name}_function, izip(${zip_variables.join(',')}))`
     } else {
-        var argument_names = block.depends_on.map(parent_block => parent_block.name).join(', ');
+        var argument_names = _.uniq(get_user_identifiers(block.code));
         python_expression = `_${block.name}_function(${argument_names})`;
     }
 

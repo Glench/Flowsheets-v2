@@ -225,22 +225,21 @@ button#new-import {
   right: -2.66666667px;
   cursor: nwse-resize;
 }
-/*
 #sidebar {
-    width: 700px;
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100%;
-    border: 2px solid #ccc;
-    background-color: white;
-
-    .CodeMirror {
-        background-color: transparent;
-        height: 100%;
-    }
+  width: 700px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  border: 2px solid #ccc;
+  background-color: white;
+  box-shadow: -1px 0 13px rgba(0, 0, 0, 0.3);
+  z-index: 100;
 }
-*/
+#sidebar .CodeMirror {
+  background-color: transparent;
+  height: 100%;
+}
 /*
 
 === maybe how to fix codemirror styling? ===
