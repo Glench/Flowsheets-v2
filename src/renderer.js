@@ -46,6 +46,7 @@ class UIBlock {
     filter_clause_height: number; // in # of rows, not pixels
     sort_clause_height: number; // in # of rows, not pixels
     output_height: number; // in # of rows, not pixels
+    visualization_options_height: number;
 
     block: Block;
 
@@ -60,6 +61,7 @@ class UIBlock {
         this.filter_clause_height = 0;
         this.sort_clause_height = 0;
         this.output_height = 1;
+        this.visualization_options_height = 0;
     }
 };
 module.exports.UIBlock = UIBlock;
@@ -239,6 +241,8 @@ function initialize_sidebar() {
             }
         }
     });
+
+    $visualization_editor.prepend('<h2>Edit Visualization</h2>')
 
 
     $('#sidebar').append($visualization_editor);
@@ -572,6 +576,9 @@ function create_and_render_block(block: Block, row: number, column: number) {
     var $output = $('<div class="output">');
     $block.append($output)
 
+    var $visualization_options = $('<div class="visualization_options">')
+    $block.append($visualization_options)
+
 
     // resize handle
     var $resize = $('<div class="resize-handle">')
@@ -628,13 +635,27 @@ function resize(ui_block: UIBlock) {
         top: ui_block.row*cell_height + 1,
         left: ui_block.column*cell_width + 1,
         width: ui_block.width_in_columns*cell_width - 1,
-        height: cell_height*(ui_block.name_height+ui_block.code_height+ui_block.filter_clause_height+ui_block.sort_clause_height+ui_block.output_height) - 1,
+        height: cell_height*(
+            ui_block.name_height+
+            ui_block.code_height+
+            ui_block.filter_clause_height+
+            ui_block.sort_clause_height+
+            ui_block.output_height+
+            ui_block.visualization_options_height
+        ) - 1,
     })
 
     $block.find('.code').css('height', cell_height*ui_block.code_height - 1);
     $block.find('.filter_clause').css('height', cell_height*ui_block.filter_clause_height - 1);
     $block.find('.sort_clause').css('height', cell_height*ui_block.sort_clause_height - 1);
     $block.find('.output').css('height', cell_height*ui_block.output_height - 2);
+
+    $block.find('.visualization_options').css('height', cell_height*ui_block.visualization_options_height - 1);
+    if (ui_block.visualization_options_height == 0) {
+        $block.find('.visualization_options').hide();
+    } else {
+        $block.find('.visualization_options').show();
+    }
 }
 
 function render_output(block: Block) {
@@ -647,7 +668,7 @@ function render_output(block: Block) {
             ui_block.output_height = 1;
         }
     }
-    var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
+    var visualization:Object = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
     try {
         ReactDOM.render(React.createElement(visualization, {
             block: block,
@@ -658,6 +679,12 @@ function render_output(block: Block) {
         block.error = 'Error in visualization: '+e;
         render_error(block)
     }
+
+    if (visualization.options) {
+        ui_block.visualization_options_height = 1;
+        ReactDOM.render(React.createElement(visualization.options, null), document.querySelector('#block-'+block.name+' .visualization_options'))
+    }
+
     resize(ui_block)
 };
 module.exports.render_output = render_output;

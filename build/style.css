@@ -209,13 +209,22 @@ button#new-import {
 .block .sort_clause .flowsheets-code-selection:hover {
   opacity: 1;
 }
-.block .code-resizer {
+.block .code-resizer,
+.block .visualization_options-resizer {
   position: absolute;
   z-index: 100;
   margin-top: -1.5px;
   height: 3px;
   width: 100%;
   cursor: ns-resize;
+}
+.block .visualization_options {
+  font-size: 10px;
+  overflow: auto;
+  font-family: "Helvetica Neue", Helvetica, Verdana, sans-serif;
+  background-color: #eee;
+  line-height: 1.38;
+  border-top: 1px solid #999;
 }
 .block .resize-handle {
   width: 8px;
@@ -226,7 +235,7 @@ button#new-import {
   cursor: nwse-resize;
 }
 #sidebar {
-  width: 700px;
+  width: 500px;
   position: fixed;
   top: 0;
   right: 0;
@@ -236,7 +245,15 @@ button#new-import {
   box-shadow: -1px 0 13px rgba(0, 0, 0, 0.3);
   z-index: 100;
 }
+#sidebar h2 {
+  font-family: Helvetica, Verdana, sans-serif;
+  margin-left: 14px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
 #sidebar .CodeMirror {
+  padding: 0 10px;
   background-color: transparent;
   height: 100%;
 }

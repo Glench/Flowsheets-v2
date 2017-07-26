@@ -93,9 +93,9 @@ class DefaultViz extends React.Component {
                 }
 
                 if (_.isArray(this.props.block.output)) {
-                    outputElement.push(React.createElement('input', {style: inputStyle, value: !_.isUndefined(item.repr) ? item.repr : item, key: `${index}-${item}`}))
+                    outputElement.push(React.createElement('input', {style: inputStyle, value: !_.isUndefined(item.repr) ? item.repr : item, key: `${index}-${item}`, readOnly: true}))
                 } else {
-                    outputElement.push(React.createElement('input', {style: inputStyle, value: ''+JSON.stringify(index)+': '+JSON.stringify(item)}))
+                    outputElement.push(React.createElement('input', {style: inputStyle, value: ''+JSON.stringify(index)+': '+JSON.stringify(item), readOnly: true}))
                 }
                 i += 1;
             })
@@ -121,7 +121,7 @@ class DefaultViz extends React.Component {
                 }}, 'Length: '+length)
             );
         } else {
-            var outputElement: any = React.createElement('input', {style: inputStyle, value: JSON.stringify(this.props.block.output)});
+            var outputElement: any = React.createElement('input', {style: inputStyle, value: JSON.stringify(this.props.block.output), readOnly: true});
         }
         return React.createElement('div', {ref: 'scrollable', onScroll: this.scroll}, 
             React.createElement('div', {ref: 'container', style: {height: cell_height*length}}, outputElement)
@@ -154,7 +154,55 @@ class TextViz extends React.Component {
 }
 module.exports.TextViz = TextViz;
 
+class TextDiffVizOptions extends React.Component {
+    state: Object;
+    change_compare_against: Function;
+    change_show_additions: Function;
+    change_show_deletions: Function;
+
+    constructor(props:Object) {
+        super(props);
+
+        this.state = {
+            compare_against: '', //block name to compare block's output against
+            show_additions: true,
+            show_deletions: true,
+        };
+        this.change_compare_against = this.change_compare_against.bind(this);
+        this.change_show_additions = this.change_show_additions.bind(this);
+        this.change_show_deletions = this.change_show_deletions.bind(this);
+    }
+
+    change_compare_against(evt:any) { // @flow hack, should be Event type but EventTarget doesn't always have 'value' property
+        this.setState({compare_against: evt.target.value || ''});
+    }
+    change_show_additions(evt:any) {
+        this.setState({show_additions: !this.state.show_additions})
+    }
+    change_show_deletions(evt: any) {
+        this.setState({show_deletions: !this.state.show_deletions})
+    }
+
+    render() {
+        return React.createElement('div', null, [
+            React.createElement('div', null,
+                React.createElement('label', null, 'compare against: '),
+                React.createElement('input', {value: this.state.compare_against, onChange: this.change_compare_against, size: this.state.compare_against.length || 4, key: 'compare_against'}),
+            ),
+            React.createElement('div', null, [
+                React.createElement('input', {type: 'checkbox', value: this.state.show_additions, onChange: this.change_show_additions, key: 'show_additions'}),
+                React.createElement('label', null, 'show additions'),
+            ]),
+            React.createElement('div', null, [
+                React.createElement('input', {type: 'checkbox', value: this.state.show_deletions, onChange: this.change_show_deletions, key: 'show_deletions'}),
+                React.createElement('label', null, 'show deletions'),
+            ]),
+        ])
+    }
+}
 class TextDiffViz extends React.Component {
+    static options: Object;
+
     constructor(props:Object) {
         super(props)
     }
@@ -178,6 +226,7 @@ class TextDiffViz extends React.Component {
         }))
     }
 }
+TextDiffViz.options = TextDiffVizOptions;
 module.exports.TextDiffViz = TextDiffViz;
 
 class RawJSONViz extends React.Component {
