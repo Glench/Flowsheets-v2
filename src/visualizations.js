@@ -163,8 +163,9 @@ class TextDiffVizOptions extends React.Component {
     constructor(props:Object) {
         super(props);
 
+        var default_compare_against_block = _.find(this.props.block.depends_on, test_block => _.isString(test_block.output));
         this.state = {
-            compare_against: '', //block name to compare block's output against
+            compare_against_block_name: (default_compare_against_block ? default_compare_against_block.name : ''),
             show_additions: true,
             show_deletions: true,
         };
@@ -174,7 +175,7 @@ class TextDiffVizOptions extends React.Component {
     }
 
     change_compare_against(evt:any) { // @flow hack, should be Event type but EventTarget doesn't always have 'value' property
-        this.setState({compare_against: evt.target.value || ''});
+        this.setState({compare_against_block_name: evt.target.value || ''});
     }
     change_show_additions(evt:any) {
         this.setState({show_additions: !this.state.show_additions})
@@ -182,19 +183,22 @@ class TextDiffVizOptions extends React.Component {
     change_show_deletions(evt: any) {
         this.setState({show_deletions: !this.state.show_deletions})
     }
-
+    componentDidUpdate() {
+        this.props.render_visualization(this.props.ui_block, this.props.block, TextDiffViz)
+    }
     render() {
+        var option_attributes = {style:{display: 'inline-block'}}
         return React.createElement('div', null, [
-            React.createElement('div', null,
-                React.createElement('label', null, 'compare against: '),
-                React.createElement('input', {value: this.state.compare_against, onChange: this.change_compare_against, size: this.state.compare_against.length || 4, key: 'compare_against'}),
+            React.createElement('div', option_attributes,
+                React.createElement('label', null, ' diff against: '),
+                React.createElement('input', {value: this.state.compare_against_block_name, onChange: this.change_compare_against, size: this.state.compare_against_block_name.length || 4, key: 'compare_against'}),
             ),
-            React.createElement('div', null, [
-                React.createElement('input', {type: 'checkbox', value: this.state.show_additions, onChange: this.change_show_additions, key: 'show_additions'}),
+            React.createElement('div', option_attributes, [
+                React.createElement('input', {type: 'checkbox', checked: this.state.show_additions, onChange: this.change_show_additions, key: 'show_additions'}),
                 React.createElement('label', null, 'show additions'),
             ]),
-            React.createElement('div', null, [
-                React.createElement('input', {type: 'checkbox', value: this.state.show_deletions, onChange: this.change_show_deletions, key: 'show_deletions'}),
+            React.createElement('div', option_attributes, [
+                React.createElement('input', {type: 'checkbox', checked: this.state.show_deletions, onChange: this.change_show_deletions, key: 'show_deletions'}),
                 React.createElement('label', null, 'show deletions'),
             ]),
         ])
@@ -208,18 +212,19 @@ class TextDiffViz extends React.Component {
     }
 
     render() {
-        var first_string_block = _.find(this.props.block.depends_on, test_block => _.isString(test_block.output))
-        if (!first_string_block) {
-            return React.createElement('div', null, this.props.block.output);
+        var compare_against_block = _.find(this.props.blocks, test_block => test_block.name == this.props.options.compare_against_block_name);
+        if (!compare_against_block) {
+            throw 'Block with name "'+ this.props.options.compare_against_block_name +'" not found';
         }
-
-        var changes = diff.diffChars(first_string_block.output, this.props.block.output);
+        var changes = diff.diffChars(compare_against_block.output, this.props.block.output);
         return React.createElement('div', null, changes.map((part,i) => {
             return React.createElement('span', {
                 style: {
-                    color: part.added ? 'green' : part.removed ? 'red' : 'grey',
-                    fontWeight: part.added ? 'bold' : 'normal',
-                    textDecoration: part.removed ? 'line-through' : 'none',
+                    color: part.added && this.props.options.show_additions ? 'green' : (part.removed && this.props.options.show_deletions ? 'red' : 'grey'),
+                    fontWeight: part.added && this.props.options.show_additions ? 'bold' : 'normal',
+                    textDecoration: part.removed && this.props.options.show_deletions ? 'line-through' : 'none',
+                    // backgroundColor: part.added && this.props.options.show_additions ? '',
+                    display: part.added && !this.props.options.show_additions ? 'none' : (part.removed && !this.props.options.show_deletions ? 'none' : 'inline'),
                 },
                 key: i,
             }, part.value)

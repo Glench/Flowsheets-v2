@@ -219,7 +219,7 @@ button#new-import {
   cursor: ns-resize;
 }
 .block .visualization_options {
-  font-size: 10px;
+  font-size: 11px;
   overflow: auto;
   font-family: "Helvetica Neue", Helvetica, Verdana, sans-serif;
   background-color: #eee;

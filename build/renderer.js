@@ -34,6 +34,7 @@ class UIBlock {
 
     // in # of rows, not pixels
     // in # of rows, not pixels
+    // in # of rows, not pixels
     constructor() {
         this.should_auto_resize = true;
         this.width_in_columns = 1;
@@ -44,7 +45,7 @@ class UIBlock {
         this.sort_clause_height = 0;
         this.output_height = 1;
         this.visualization_options_height = 0;
-    } // in # of rows, not pixels
+    } // should be React.Component, but  is awful
     // in # of rows, not pixels
     // in # of rows, not pixels
 };
@@ -595,6 +596,7 @@ function resize(ui_block) {
         height: cell_height * (ui_block.name_height + ui_block.code_height + ui_block.filter_clause_height + ui_block.sort_clause_height + ui_block.output_height + ui_block.visualization_options_height) - 1
     });
 
+    $block.find('.name input').width(cell_width * ui_block.width_in_columns - 7 /*padding*/);
     $block.find('.code').css('height', cell_height * ui_block.code_height - 1);
     $block.find('.filter_clause').css('height', cell_height * ui_block.filter_clause_height - 1);
     $block.find('.sort_clause').css('height', cell_height * ui_block.sort_clause_height - 1);
@@ -618,25 +620,39 @@ function render_output(block) {
             ui_block.output_height = 1;
         }
     }
+
     var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
+
+    if (visualization.options) {
+        ui_block.visualization_options_height = 1;
+        ui_block.visualization_options = ReactDOM.render(React.createElement(visualization.options, {
+            block: block,
+            ui_block: ui_block,
+            render_visualization: render_visualization
+        }), document.querySelector('#block-' + block.name + ' .visualization_options'));
+    } else {
+        ui_block.visualization_options_height = 0;
+        ui_block.visualization_options = null;
+    }
+
+    render_visualization(ui_block, block, visualization);
+
+    resize(ui_block);
+};
+module.exports.render_output = render_output;
+function render_visualization(ui_block, block, visualization) {
     try {
         ReactDOM.render(React.createElement(visualization, {
             block: block,
-            ui_block: ui_block
+            ui_block: ui_block,
+            blocks: interpreter.blocks,
+            options: ui_block.visualization_options ? ui_block.visualization_options.state : null
         }), document.querySelector('#block-' + block.name + ' .output'));
     } catch (e) {
         block.error = 'Error in visualization: ' + e;
         render_error(block);
     }
-
-    if (visualization.options) {
-        ui_block.visualization_options_height = 1;
-        ReactDOM.render(React.createElement(visualization.options, null), document.querySelector('#block-' + block.name + ' .visualization_options'));
-    }
-
-    resize(ui_block);
-};
-module.exports.render_output = render_output;
+}
 
 function delete_(ui_block) {
     $('#block-' + ui_block.block.name).remove();
