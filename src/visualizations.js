@@ -159,6 +159,7 @@ class TextDiffVizOptions extends React.Component {
     change_compare_against: Function;
     change_show_additions: Function;
     change_show_deletions: Function;
+    change_name: Function;
 
     constructor(props:Object) {
         super(props);
@@ -172,6 +173,7 @@ class TextDiffVizOptions extends React.Component {
         this.change_compare_against = this.change_compare_against.bind(this);
         this.change_show_additions = this.change_show_additions.bind(this);
         this.change_show_deletions = this.change_show_deletions.bind(this);
+        this.change_name = this.change_name.bind(this);
     }
 
     change_compare_against(evt:any) { // @flow hack, should be Event type but EventTarget doesn't always have 'value' property
@@ -185,6 +187,11 @@ class TextDiffVizOptions extends React.Component {
     }
     componentDidUpdate() {
         this.props.render_visualization(this.props.ui_block, this.props.block, TextDiffViz)
+    }
+    change_name(old_name:string, new_name:string) {
+        if (this.state.compare_against_block_name == old_name) {
+            this.setState({compare_against_block_name: new_name})
+        }
     }
     render() {
         var option_attributes = {style:{display: 'inline-block'}}

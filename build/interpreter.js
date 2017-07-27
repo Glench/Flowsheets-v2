@@ -488,6 +488,11 @@ function change_name(block, name) {
                 }
             }
         }
+
+        var ui_block = _.find(ui.ui_blocks, iter_ui_block => iter_ui_block.block == test_block);
+        if (ui_block.visualization_options) {
+            ui_block.visualization_options.change_name(old_name, block.name);
+        }
     });
     if (block.filter_clause) {
         block.filter_clause = replace_python_names(block.filter_clause, old_name, block.name);

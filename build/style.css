@@ -101,7 +101,7 @@ button#new-import {
 .block .sort_clause,
 .block .output {
   height: 19px;
-  overflow: scroll;
+  overflow: auto;
   background-color: rgba(255, 255, 255, 0.6);
 }
 .block .name input,
