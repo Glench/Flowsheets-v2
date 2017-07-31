@@ -1,3 +1,4 @@
+const fs = require('fs');
 const _ = require('underscore');
 const React = require('react');
 const $ = require('jquery');
@@ -222,6 +223,138 @@ class RawJSONViz extends React.Component {
     }
 }
 module.exports.RawJSONViz = RawJSONViz;
+
+class HTMLPickerVizOptions extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            selector: ''
+        };
+        this.change_selector = this.change_selector.bind(this);
+    }
+    change_selector(evt) {
+        this.setState({ selector: evt.target.value });
+    }
+
+    render() {
+        return React.createElement('div', null, [React.createElement('label', null, 'Selector: '), React.createElement('input', { onChange: this.change_selector, value: this.state.selector })]);
+    }
+}
+class HTMLPickerViz extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.attach_picker_events = this.attach_picker_events.bind(this);
+        this.common_nodes = [];
+        this.old_selector = '';
+    }
+    componentDidMount() {}
+    componentDidUpdate() {}
+    attach_picker_events() {
+        // first, make sure jquery is there
+        var jquery = document.createElement('script');
+        jquery.innerText = fs.readFileSync('node_modules/jquery/dist/jquery.min.js').toString();
+        this.refs.iframe.contentWindow.document.body.appendChild(jquery);
+
+        var nodes = [];
+
+        var start_nodes = this.refs.iframe.contentWindow.document.querySelectorAll('body > *');
+        for (var i = 0; i < start_nodes.length; ++i) {
+            nodes.push(start_nodes[i]);
+        }
+
+        var candidate_nodes = [];
+
+        // Basically, get all nodes with at least one text node as a child as a good candidate for a user to choose
+        // since users will probably only want to choose nodes with text in them.
+
+        while (nodes.length > 0) {
+            var node = nodes.pop();
+            if (node.hasChildNodes() && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE' && node.tagName !== 'NOSCRIPT') {
+                for (var i = 0; i < node.childNodes.length; ++i) {
+                    var child_node = node.childNodes[i];
+                    // if a node has any children that are text, it's a candidate
+                    if (child_node.nodeType == child_node.TEXT_NODE) {
+                        candidate_nodes.push(node);
+                        break;
+                    } else {
+                        nodes.push(child_node);
+                    }
+                }
+            }
+        }
+
+        var classname = 'flowsheets_selected';
+
+        candidate_nodes.forEach(node => {
+            $(node).on('mouseenter', evt => {
+                var $t = $(evt.target);
+                if ($t.hasClass(classname)) return;
+
+                $(evt.target).css({ backgroundColor: 'yellow' });
+            }).on('mouseleave', evt => {
+                var $t = $(evt.target);
+                if ($t.hasClass(classname)) return;
+
+                $(evt.target).css({ backgroundColor: 'inherit' });
+            }).off('mousedown mouseup click').on('click', evt => {
+                evt.preventDefault();
+                evt.stopPropagation();
+                // make sure it's not already there
+                for (var i = 0; i < this.common_nodes.length; ++i) {
+                    if (this.common_nodes[i] === evt.target) {
+                        return;
+                    }
+                }
+
+                this.common_nodes.push(evt.target);
+
+                // find closest common ancestor
+                var $closestAncestor = $(this.common_nodes[0]).parents();
+                this.common_nodes.forEach(node => {
+                    var $node = $(node);
+                    $closestAncestor = $closestAncestor.has($node);
+                });
+                console.log($closestAncestor.first());
+
+                // make selector
+                var selector = $closestAncestor.prop('tagName').toLowerCase();
+                if ($closestAncestor.attr('id')) {
+                    selector += '#' + $closestAncestor.attr('id');
+                } else if ($closestAncestor.attr('class')) {
+                    selector += '.' + $closestAncestor.attr('class').replace(/\s+$/, '').split(/\s+/).join('.');
+                }
+
+                selector += ' ';
+
+                selector += this.common_nodes[0].tagName.toLowerCase();
+                if (this.common_nodes[0].className) {
+                    selector += '.' + this.common_nodes[0].className.replace(/\s+$/, '').split(/\s+/).join('.');
+                }
+                console.log(selector);
+
+                this.refs.iframe.contentWindow.$(this.old_selector).removeClass('flowsheets_selected').css({
+                    backgroundColor: 'inherit'
+                });
+                this.old_selector = selector;
+                this.refs.iframe.contentWindow.$(selector).addClass('flowsheets_selected').css({
+                    backgroundColor: 'yellow'
+                });
+
+                this.props.options_component.setState({ selector: selector });
+            });
+        });
+    }
+
+    render() {
+        var src = 'data:text/html;charset=utf-8,' + encodeURI(this.props.block.output);
+
+        return React.createElement('iframe', { src: src, ref: 'iframe', onLoad: this.attach_picker_events, style: { width: '100%' } });
+    }
+}
+HTMLPickerViz.options = HTMLPickerVizOptions;
+module.exports.HTMLPickerViz = HTMLPickerViz;
 
 class CustomViz extends React.Component {
     constructor(props) {
