@@ -5,7 +5,8 @@ const $ = require('jquery');
 const diff = require('diff');
 
 const interpreter = require('./interpreter');
-const cell_height = require('./renderer').cell_height;
+const ui = require('./renderer');
+const cell_height = ui.cell_height;
 
 function fade_background_color($element, alpha, color) {
     if (color[3] !== 'a') {
@@ -229,16 +230,28 @@ class HTMLPickerVizOptions extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selector: ''
+            selector: '',
+            send_to_block_name: ''
         };
         this.change_selector = this.change_selector.bind(this);
+        this.new_block = this.new_block.bind(this);
     }
     change_selector(evt) {
         this.setState({ selector: evt.target.value });
     }
+    new_block(evt) {
+        var block = interpreter.create_block('css_selector', `'${this.state.selector}'`);
+        this.setState({ send_to_block_name: block.name });
+        ui.create_and_render_block(block, this.props.ui_block.row, this.props.ui_block.column + this.props.ui_block.width_in_columns);
+    }
+    change_name(old_name, new_name) {
+        if (old_name === this.state.send_to_block_name) {
+            this.setState({ send_to_block_name: new_name });
+        }
+    }
 
     render() {
-        return React.createElement('div', null, [React.createElement('label', null, 'Selector: '), React.createElement('input', { onChange: this.change_selector, value: this.state.selector })]);
+        return React.createElement('div', null, [React.createElement('label', null, 'Selector: '), React.createElement('input', { type: 'search', onChange: this.change_selector, value: this.state.selector }), this.state.send_to_block_name ? React.createElement('span', { style: { color: 'white', backgroundColor: 'black', fontWeight: 'bold', padding: '2px 4px', marginLeft: 10 } }, this.state.send_to_block_name) : React.createElement('button', { onClick: this.new_block }, '->')]);
     }
 }
 class HTMLPickerViz extends React.Component {
@@ -250,7 +263,10 @@ class HTMLPickerViz extends React.Component {
         this.old_selector = '';
     }
     componentDidMount() {}
-    componentDidUpdate() {}
+    componentDidUpdate(old_props) {
+        this.common_nodes = [];
+        this.old_selector = '';
+    }
     attach_picker_events() {
         // first, make sure jquery is there
         var jquery = document.createElement('script');
@@ -316,7 +332,6 @@ class HTMLPickerViz extends React.Component {
                     var $node = $(node);
                     $closestAncestor = $closestAncestor.has($node);
                 });
-                console.log($closestAncestor.first());
 
                 // make selector
                 var selector = $closestAncestor.prop('tagName').toLowerCase();
@@ -332,7 +347,6 @@ class HTMLPickerViz extends React.Component {
                 if (this.common_nodes[0].className) {
                     selector += '.' + this.common_nodes[0].className.replace(/\s+$/, '').split(/\s+/).join('.');
                 }
-                console.log(selector);
 
                 this.refs.iframe.contentWindow.$(this.old_selector).removeClass('flowsheets_selected').css({
                     backgroundColor: 'inherit'
@@ -343,6 +357,11 @@ class HTMLPickerViz extends React.Component {
                 });
 
                 this.props.options_component.setState({ selector: selector });
+                var send_selector_to_block = _.find(this.props.blocks, block => block.name === this.props.options_component.state.send_to_block_name);
+                if (send_selector_to_block) {
+                    interpreter.change_code(send_selector_to_block, `'${selector}'`);
+                    ui.render_code(send_selector_to_block);
+                }
             });
         });
     }
@@ -350,7 +369,7 @@ class HTMLPickerViz extends React.Component {
     render() {
         var src = 'data:text/html;charset=utf-8,' + encodeURI(this.props.block.output);
 
-        return React.createElement('iframe', { src: src, ref: 'iframe', onLoad: this.attach_picker_events, style: { width: '100%' } });
+        return React.createElement('iframe', { src: src, ref: 'iframe', onLoad: this.attach_picker_events, frameBorder: 0, style: { width: '100%' } });
     }
 }
 HTMLPickerViz.options = HTMLPickerVizOptions;

@@ -264,9 +264,9 @@ function python_declare(block) {
         if (tokens && tokens.length) {
             tokens.forEach(token => code = code.replace(token, '{}'));
             var expressions = tokens.map(token => token.replace(/^\$\{/, '').replace(/\}$/, '')); // remove ${ and } from ${butts}, leaving only 'butts'
-            code = `"""${code}""".format(${expressions.join(',')})`;
+            code = `return """${code}""".format(${expressions.join(',')})`;
         } else {
-            code = `"""${code}"""`;
+            code = `return """${code}"""`;
         }
     }
 
@@ -398,9 +398,8 @@ function python_run(block) {
         });
 
         // can't just use map(f, a,b,c) because python's map uses zip_longest behavior
-        python_expression = `starmap(_${block.name}_function, izip(${zip_variables.join(',')}))`;
+        python_expression = `starmap(_${block.name}_function, izip(${zip_variables.join(',')}))`; // 'startmap(_a_function, izip(a, b))'
     } else {
-        var argument_names = _.uniq(get_user_identifiers(block.code));
         python_expression = `_${block.name}_function(${argument_names})`;
     }
 

@@ -440,7 +440,7 @@ function create_and_render_block(block, row, column) {
             if (ui_block.should_auto_resize) {
                 var code = instance.getValue();
                 var _ui_block = ui_block; // stupid  workaround: https://github.com/facebook/flow/issues/1730
-                _ui_block[ui_block_cell_name] = _.filter(code, x => x == '\n').length + 1;
+                _ui_block[ui_block_cell_name] = clamp(_.filter(code, x => x == '\n').length + 1, 1, 30); // limit pasting in long strings
 
                 // make block width equal to the number of characters that will fit in a cell,
                 var number_of_characters_that_will_fit_in_a_cell = 10.5;
