@@ -563,7 +563,7 @@ function change_name(block: Block, name: string):string {
 }
 module.exports.change_name = change_name;
 
-function set_dependencies(block: Block) {
+function set_dependencies(block: Block): boolean {
 
     var names: string[] = [];
     try {
@@ -580,12 +580,22 @@ function set_dependencies(block: Block) {
             }
         } else {
             names = get_user_identifiers(block.code);
+
+            // TODO: do more robust cycle detection
+            // For now, just trying to catch dumb mistakes
+            var is_referrering_to_self = false;
+            names.forEach(name => {
+                if (name == block.name || name.replace(/_$/, '') == block.name) {
+                    is_referrering_to_self = true;
+                }
+            })
+            if (is_referrering_to_self) throw "Can't refer to own block: "+block.name;
         }
     } catch(e) {
         // syntax error in filbert parsing most likely
         block.error = e;
         ui.render_error(block);
-        return
+        return false;
     }
 
     if (block.filter_clause) {
@@ -600,20 +610,22 @@ function set_dependencies(block: Block) {
             // syntax error in filbert parsing most likely
             block.error = e;
             ui.render_error(block);
-            return
+            return false;
         }
     }
 
     block.depends_on = blocks.filter(function(test_block: Block) {
         return names.includes(test_block.name) || names.includes(test_block.name+'_');
     });
+    return true;
 
 }
 
 function change_code(block: Block, code: string) {
     block.code = code;
 
-    set_dependencies(block);
+    var success = set_dependencies(block);
+    if (!success) return;
 
     python_declare(block)
 
