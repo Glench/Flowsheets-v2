@@ -273,9 +273,8 @@ class HTMLPickerVizOptions extends React.Component {
     componentDidUpdate() {
         this.props.render_visualization(this.props.ui_block, HTMLPickerViz)
 
-        var block = _.find(interpreter.blocks, block => block.name == this.state.send_to_block_name);
-        if (block) {
-            console.log(block)
+        if (this.state.send_to_block_name) {
+            var block = _.find(interpreter.blocks, block => block.name == this.state.send_to_block_name);
             interpreter.change_code(block, `'${this.state.selector}'`);
             ui.render_code(block);
         }
