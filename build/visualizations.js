@@ -275,7 +275,6 @@ class HTMLPickerViz extends React.Component {
     }
     componentDidMount() {}
     componentDidUpdate(old_props) {
-        console.log(this.props.options);
         this.highlight_selector(this.props.options.selector);
         this.common_nodes = [];
         this.old_selector = '';

@@ -29,7 +29,7 @@ function clamp(num: number, min: number, max: number):number {
 const visualizations = require('./visualizations')
 const interpreter = require('./interpreter')
 const Block = interpreter.Block;
-
+const Import = interpreter.Import;
 
 var ui_blocks: UIBlock[] = [];
 module.exports.ui_blocks = ui_blocks;
@@ -250,10 +250,12 @@ function initialize_sidebar() {
 }
 
 function create_and_render_import() {
+    var import_ = interpreter.create_import('');
+
     var $input = $('<input>').attr('class', 'import');
     $input.on('change', function(evt) {
-        interpreter.python_import(evt.target.value)
-    })
+        interpreter.change_import_code(import_, evt.target.value)
+    });
     $('#imports').append($input)
     $input.focus();
 }
@@ -628,6 +630,16 @@ function render_error(block: Block) {
     }
 }
 module.exports.render_error = render_error;
+
+function render_import_error(import_: Import) {
+    var index = interpreter.imports.indexOf(import_);
+    if (import_.error) {
+        $('#imports input').eq(index).css({backgroundColor: 'red', color: 'white'})
+    } else {
+        $('#imports input').eq(index).css({backgroundColor: 'white', color: 'black'})
+    }
+}
+module.exports.render_import_error = render_import_error;
 
 function resize(ui_block: UIBlock) {
     var $block = $('#block-'+ui_block.block.name)

@@ -208,6 +208,36 @@ function generate_unique_name_from_name(test_name) {
 var success_queue = [];
 var fail_queue = [];
 
+var imports = [];
+module.exports.imports = imports;
+
+class Import {}
+module.exports.Import = Import;
+
+function create_import(code) {
+    var import_ = new Import();
+    import_.code = code;
+
+    imports.push(import_);
+    return import_;
+}
+module.exports.create_import = create_import;
+
+function change_import_code(import_, code) {
+    import_.code = code;
+
+    success_queue.push(function (data) {
+        import_.error = null;
+        ui.render_import_error(import_);
+    });
+    fail_queue.push(function (data) {
+        import_.error = data;
+        ui.render_import_error(import_);
+    });
+    python_exec(import_.code);
+}
+module.exports.change_import_code = change_import_code;
+
 class Block {
 
     constructor() {
@@ -240,17 +270,6 @@ function create_block(name, code) {
     return block;
 }
 module.exports.create_block = create_block;
-
-function python_import(python_code) {
-    // e.g. 'import time'
-    // e.g. 'from datetime import datetime'
-
-    // @Cleanup: If an import box changes, should delete old names
-    success_queue.push(function (data) {});
-    fail_queue.push(function (data) {});
-    python_exec(python_code);
-}
-module.exports.python_import = python_import;
 
 // === b ===
 // a.split('\n')

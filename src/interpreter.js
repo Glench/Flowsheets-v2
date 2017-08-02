@@ -180,6 +180,8 @@ function python_exec(python_code: string) {
 };
 
 
+
+
 var blocks: Block[] = [];
 module.exports.blocks = blocks;
 
@@ -227,6 +229,42 @@ type JSONType = | string | number | boolean | null | JSONObject | JSONArray;
 type JSONObject = { [key:string]: JSONType };
 type JSONArray = Array<JSONType>;
 
+
+
+var imports: Import[] = [];
+module.exports.imports = imports;
+
+class Import {
+    code: string;
+    error: ?string;
+}
+module.exports.Import = Import;
+
+function create_import(code: string): Import {
+    var import_ = new Import();
+    import_.code = code;
+
+    imports.push(import_);
+    return import_;
+}
+module.exports.create_import= create_import;
+
+function change_import_code(import_:Import, code:string) {
+    import_.code = code;
+
+    success_queue.push(function(data: string) {
+        import_.error = null;
+        ui.render_import_error(import_);
+    })
+    fail_queue.push(function(data: string) {
+        import_.error = data;
+        ui.render_import_error(import_);
+    })
+    python_exec(import_.code)
+}
+module.exports.change_import_code = change_import_code;
+
+
 class Block {
     name: string;
     depends_on: Block[];
@@ -266,21 +304,6 @@ function create_block(name: ?string, code: string) {
     return block;
 }
 module.exports.create_block = create_block;
-
-function python_import(python_code: string) {
-    // e.g. 'import time'
-    // e.g. 'from datetime import datetime'
-
-    // @Cleanup: If an import box changes, should delete old names
-    success_queue.push(function(data: string) {
-
-    })
-    fail_queue.push(function(data: string) {
-
-    })
-    python_exec(python_code)
-}
-module.exports.python_import = python_import;
 
 // === b ===
 // a.split('\n')
