@@ -129,7 +129,8 @@ class RenderedHTMLViz extends React.Component {
     }
 
     render() {
-        return React.createElement('div', { dangerouslySetInnerHTML: { __html: this.props.block.output } });
+        var src = 'data:text/html;charset=utf-8,' + encodeURI(this.props.block.output);
+        return React.createElement('iframe', { src: src, ref: 'iframe', frameBorder: 0, style: { width: '100%' } });
     }
 }
 module.exports.RenderedHTMLViz = RenderedHTMLViz;

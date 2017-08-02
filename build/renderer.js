@@ -45,6 +45,7 @@ class UIBlock {
         this.filter_clause_height = 0;
         this.sort_clause_height = 0;
         this.output_height = 1;
+        this.visualization = visualizations.DefaultViz;
         this.visualization_options_height = 0;
     } // should be React.Component, but  is awful
     // in # of rows, not pixels
@@ -125,7 +126,8 @@ function initialize_grid() {
 
     $('body').on('mousemove', function (evt) {
         if (resize_drag) {
-            resize_drag.ui_block.should_auto_resize = false;
+            var ui_block = resize_drag.ui_block;
+            ui_block.should_auto_resize = false;
 
             var dx = evt.pageX - resize_drag.x;
             var dy = evt.pageY - resize_drag.y;
@@ -134,15 +136,19 @@ function initialize_grid() {
             if (dx % cell_width > cell_width / 3) {
                 new_columns = Math.ceil(dx / cell_width);
             }
-            resize_drag.ui_block.width_in_columns = clamp(resize_drag.original_width_in_columns + new_columns, 1, columns);
+            ui_block.width_in_columns = clamp(resize_drag.original_width_in_columns + new_columns, 1, columns);
 
             var new_rows = Math.floor(dy / cell_height);
             if (dy % cell_height > cell_height / 3) {
                 new_rows = Math.ceil(dy / cell_height);
             }
-            resize_drag.ui_block.output_height = clamp(resize_drag.original_output_height + new_rows, 1, rows);
+            var previous_output_height = ui_block.output_height;
+            ui_block.output_height = clamp(resize_drag.original_output_height + new_rows, 1, rows);
 
-            resize(resize_drag.ui_block);
+            if (ui_block.output_height > previous_output_height) {
+                render_visualization(ui_block, ui_block.visualization);
+            }
+            resize(ui_block);
         } else if (move_drag) {
             if (move_drag.is_dragging(evt.pageX, evt.pageY)) {
                 var offset = $('#main').offset();
@@ -339,7 +345,7 @@ function create_and_render_block(block, row, column) {
             $block.append($submenu);
 
             _.each(visualizations, function (react_component, name) {
-                var text = react_component === ui_block.visualization || !ui_block.visualization && name == 'DefaultViz' ? name + '︎&nbsp;✔' : name;
+                var text = name;
                 var $li = $('<li>').html(text).on('click', function (evt) {
                     $block.find('.menu, .submenu').remove();
                     ui_block.visualization = react_component;
@@ -590,7 +596,6 @@ function render_error(block) {
 module.exports.render_error = render_error;
 
 function render_import_error(import_) {
-    console.log(interpreter.imports.indexOf(import_));
     var index = interpreter.imports.indexOf(import_);
     if (import_.error) {
         $('#imports input').eq(index).css({ backgroundColor: 'red', color: 'white' });
@@ -635,7 +640,7 @@ function render_output(block) {
         }
     }
 
-    var visualization = ui_block.visualization ? ui_block.visualization : visualizations.DefaultViz;
+    var visualization = ui_block.visualization;
 
     if (visualization.options) {
         ui_block.visualization_options_height = 1;
