@@ -282,14 +282,21 @@ class HTMLPickerViz extends React.Component {
     }
 
     highlight_selector(selector) {
-        this.refs.iframe.contentWindow.$(this.old_selector).removeClass('flowsheets_selected').css({
+        var clear_selector = '.flowsheets_selected';
+        if (this.old_selector) {
+            clear_selector += ', ' + this.old_selector;
+        }
+
+        this.refs.iframe.contentWindow.$(clear_selector).removeClass('flowsheets_selected').css({
             backgroundColor: 'inherit',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            outline: 'none'
         });
         this.old_selector = selector;
         this.refs.iframe.contentWindow.$(selector).addClass('flowsheets_selected').css({
             backgroundColor: 'yellow',
-            boxShadow: '0 0 10px rgba(0,0,0,.4)'
+            boxShadow: '0 0 10px rgba(0,0,0,.4)',
+            outline: '1px solid yellow'
         });
     }
 
@@ -337,7 +344,7 @@ class HTMLPickerViz extends React.Component {
             }).on('mouseleave', evt => {
                 var $t = $(evt.target);
                 if ($t.hasClass(classname)) return;
-                $t.css({ backgroundColor: 'inherit', boxShadow: 'inherit' });
+                $t.css({ backgroundColor: 'inherit', boxShadow: 'inherit', outline: 'none' });
             }).off('mousedown mouseup click').on('click', evt => {
                 evt.preventDefault();
                 evt.stopPropagation();
