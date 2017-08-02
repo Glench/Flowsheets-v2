@@ -41,9 +41,9 @@
       <canvas id="main"></canvas>
     </div>
 
-    <div id="sidebar">
+<!--     <div id="sidebar">
     </div>
-
+ -->
     <script>
       const ui = require('./renderer.js')
       const interpreter = require('./interpreter.js')
@@ -60,6 +60,10 @@
       process.on('exit', () => {
           interpreter.python_interpreter.kill('SIGKILL')
       })
+      window.onbeforeunload = function (e) {
+          interpreter.WARN_ON_CLOSE = false;
+          interpreter.python_interpreter.kill('SIGKILL')
+      };
 
     </script>
   </body>

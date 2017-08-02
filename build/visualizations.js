@@ -173,7 +173,7 @@ class TextDiffVizOptions extends React.Component {
         this.setState({ show_deletions: !this.state.show_deletions });
     }
     componentDidUpdate() {
-        this.props.render_visualization(this.props.ui_block, this.props.block, TextDiffViz);
+        this.props.render_visualization(this.props.ui_block, TextDiffViz);
     }
     change_name(old_name, new_name) {
         if (this.state.compare_against_block_name == old_name) {
@@ -236,8 +236,19 @@ class HTMLPickerVizOptions extends React.Component {
         this.change_selector = this.change_selector.bind(this);
         this.new_block = this.new_block.bind(this);
     }
+    componentDidUpdate() {
+        this.props.render_visualization(this.props.ui_block, HTMLPickerViz);
+
+        var block = _.find(this.props.blocks, block => block.name == this.state.send_to_block_name);
+        if (block) {
+            console.log(block);
+            interpreter.change_code(block, `'${this.state.selector}'`);
+            ui.render_code(block);
+        }
+    }
     change_selector(evt) {
-        this.setState({ selector: evt.target.value });
+        var selector = evt.target.value;
+        this.setState({ selector: selector });
     }
     new_block(evt) {
         var block = interpreter.create_block('css_selector', `'${this.state.selector}'`);
@@ -259,14 +270,30 @@ class HTMLPickerViz extends React.Component {
     constructor(props) {
         super(props);
         this.attach_picker_events = this.attach_picker_events.bind(this);
+        this.highlight_selector = this.highlight_selector.bind(this);
         this.common_nodes = [];
         this.old_selector = '';
     }
     componentDidMount() {}
     componentDidUpdate(old_props) {
+        console.log(this.props.options);
+        this.highlight_selector(this.props.options.selector);
         this.common_nodes = [];
         this.old_selector = '';
     }
+
+    highlight_selector(selector) {
+        this.refs.iframe.contentWindow.$(this.old_selector).removeClass('flowsheets_selected').css({
+            backgroundColor: 'inherit',
+            boxShadow: 'none'
+        });
+        this.old_selector = selector;
+        this.refs.iframe.contentWindow.$(selector).addClass('flowsheets_selected').css({
+            backgroundColor: 'yellow',
+            boxShadow: '0 0 10px rgba(0,0,0,.4)'
+        });
+    }
+
     attach_picker_events() {
         // first, make sure jquery is there
         var jquery = document.createElement('script');
@@ -291,9 +318,8 @@ class HTMLPickerViz extends React.Component {
                 for (var i = 0; i < node.childNodes.length; ++i) {
                     var child_node = node.childNodes[i];
                     // if a node has any children that are text, it's a candidate
-                    if (child_node.nodeType == child_node.TEXT_NODE) {
+                    if (child_node.nodeType == child_node.TEXT_NODE && !child_node.textContent.match(/^\s+$/) || child_node.tagName === 'IMG') {
                         candidate_nodes.push(node);
-                        break;
                     } else {
                         nodes.push(child_node);
                     }
@@ -308,12 +334,11 @@ class HTMLPickerViz extends React.Component {
                 var $t = $(evt.target);
                 if ($t.hasClass(classname)) return;
 
-                $(evt.target).css({ backgroundColor: 'yellow' });
+                $t.css({ backgroundColor: 'yellow', boxShadow: '0 0 10px rgba(0,0,0,.4)' });
             }).on('mouseleave', evt => {
                 var $t = $(evt.target);
                 if ($t.hasClass(classname)) return;
-
-                $(evt.target).css({ backgroundColor: 'inherit' });
+                $t.css({ backgroundColor: 'inherit', boxShadow: 'inherit' });
             }).off('mousedown mouseup click').on('click', evt => {
                 evt.preventDefault();
                 evt.stopPropagation();
@@ -348,13 +373,7 @@ class HTMLPickerViz extends React.Component {
                     selector += '.' + this.common_nodes[0].className.replace(/\s+$/, '').split(/\s+/).join('.');
                 }
 
-                this.refs.iframe.contentWindow.$(this.old_selector).removeClass('flowsheets_selected').css({
-                    backgroundColor: 'inherit'
-                });
-                this.old_selector = selector;
-                this.refs.iframe.contentWindow.$(selector).addClass('flowsheets_selected').css({
-                    backgroundColor: 'yellow'
-                });
+                this.highlight_selector(selector);
 
                 this.props.options_component.setState({ selector: selector });
                 var send_selector_to_block = _.find(this.props.blocks, block => block.name === this.props.options_component.state.send_to_block_name);

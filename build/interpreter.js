@@ -11,10 +11,12 @@ function assert(condition) {
 
 const ui = require('./renderer.js');
 
+module.exports.WARN_ON_CLOSE = true;
+
 if (__dirname.endsWith('build')) {
     var python_interpreter = spawn('python', [__dirname + '/interpreter.py']);
     python_interpreter.on('close', function (data) {
-        alert("Python processes closed! Probably due to interpreter.py error. Error code: " + data);
+        if (module.exports.WARN_ON_CLOSE) alert("Python processes closed! Probably due to interpreter.py error. Error code: " + data);
     });
     module.exports.python_interpreter = python_interpreter;
 } else {

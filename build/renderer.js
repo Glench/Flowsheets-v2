@@ -70,7 +70,7 @@ var resize_code_drag = null;
 
 function initialize() {
     initialize_grid();
-    initialize_sidebar();
+    // initialize_sidebar();
 
     $('#new-import').on('click', function (evt) {
         create_and_render_import();
@@ -635,23 +635,23 @@ function render_output(block) {
         ui_block.visualization_options = null;
     }
 
-    render_visualization(ui_block, block, visualization);
+    render_visualization(ui_block, visualization);
 
     resize(ui_block);
 };
 module.exports.render_output = render_output;
-function render_visualization(ui_block, block, visualization) {
+function render_visualization(ui_block, visualization) {
     try {
         ReactDOM.render(React.createElement(visualization, {
-            block: block,
+            block: ui_block.block,
             ui_block: ui_block,
             blocks: interpreter.blocks,
             options: ui_block.visualization_options ? ui_block.visualization_options.state : null,
             options_component: ui_block.visualization_options
-        }), document.querySelector('#block-' + block.name + ' .output'));
+        }), document.querySelector('#block-' + ui_block.block.name + ' .output'));
     } catch (e) {
-        block.error = 'Error in visualization: ' + e;
-        render_error(block);
+        ui_block.block.error = 'Error in visualization: ' + e;
+        render_error(ui_block.block);
     }
 }
 
