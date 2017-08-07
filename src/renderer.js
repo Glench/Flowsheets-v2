@@ -9,7 +9,7 @@ require('codemirror/mode/python/python');
 require('codemirror/mode/javascript/javascript');
 
 
-const rows = 100
+const rows = 300;
 const columns = 30;
 const cell_width = 88; // including borders
 const cell_height = 19; // including borders
@@ -379,7 +379,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
             _.each(visualizations, function(react_component, name) {
                 var text = name;
-                var $li = $('<li>').html(text).on('click', function(evt) {
+                var $li = $('<li>').html(name == ui_block.visualization.name ? '✔&nbsp;'+name : name).on('click', function(evt) {
                     $block.find('.menu, .submenu').remove();
                     ui_block.visualization = react_component;
                     render_output(block);
