@@ -428,10 +428,10 @@ function python_run(block) {
     if (block.filter_clause) {
         var filter_map_variables = _.uniq(get_user_identifiers(block.filter_clause).filter(name => _.last(name) == '_' && name !== block.name + '_'));
         var filter_zip_variables = filter_map_variables.map(name => name.slice(0, name.length - 1)); // 'a_' => 'a'
-        python_expression = `list( starfilter(_${block.name}_filter_function, izip(${filter_zip_variables.join(',')}), ${python_expression}) )`;
+        python_expression = `tuple( starfilter(_${block.name}_filter_function, izip(${filter_zip_variables.join(',')}), ${python_expression}) )`;
     } else if (python_expression.indexOf('starmap') > -1) {
         // if auto-mapping, make sure to not return iterator and instead return whole list
-        python_expression = `list(${python_expression})`;
+        python_expression = `tuple(${python_expression})`;
     }
 
     python_code = `${block.name} = ${python_expression}`;
