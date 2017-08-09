@@ -10,6 +10,7 @@
     "update": "git pull && npm install"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "codemirror": "^5.28.0",
     "diff": "^3.3.0",
