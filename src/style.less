@@ -135,9 +135,15 @@ button#new-import {
 
         & > * {
             height: 100%;
-            overflow: scroll;
+            overflow: auto;
         }
 
+
+        // a fix for linux scrollbars, apparently
+        // TODO: need to figure out why scrollbars are showing up when there's only a single-line item in the output
+        & > *::-webkit-scrollbar {
+            display: none;
+        }
 
         /*
         &::-webkit-scrollbar {

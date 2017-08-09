@@ -13,7 +13,7 @@
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "codemirror": "^5.28.0",
     "diff": "^3.3.0",
-    "electron": "^1.7.5",
+    "electron": "^1.7.6",
     "filbert": "^0.1.20",
     "flow-bin": "^0.38.0",
     "jquery": "^3.2.1",

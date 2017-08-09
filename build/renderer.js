@@ -196,6 +196,7 @@ function initialize_sidebar() {
         value: code,
         mode: 'javascript',
         tabSize: 2,
+        scrollbarStyle: 'null', // just remove scrollbars for now for linux
         extraKeys: {
             'Ctrl-Enter': function (instance) {
                 var old_CustomViz = visualizations.CustomViz;

@@ -130,7 +130,10 @@ button#new-import {
 }
 .block .output > * {
   height: 100%;
-  overflow: scroll;
+  overflow: auto;
+}
+.block .output > *::-webkit-scrollbar {
+  display: none;
 }
 .block .code,
 .block .filter_clause,

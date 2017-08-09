@@ -73,7 +73,8 @@ class DefaultViz extends React.Component {
             display: 'block',
             width: '99%',
             border: 0,
-            padding: '0 3px 2px 3px'
+            padding: '0 3px 2px 3px',
+            backgroundColor: 'transparent'
         };
 
         if (_.isArray(this.props.block.output) || _.isObject(this.props.block.output)) {
@@ -141,7 +142,7 @@ class TextViz extends React.Component {
     }
 
     render() {
-        return React.createElement('pre', { style: { margin: 0, lineHeight: 1.38 } }, this.props.block.output);
+        return React.createElement('div', { style: { margin: 0, lineHeight: 1.38 } }, this.props.block.output);
     }
 }
 module.exports.TextViz = TextViz;
