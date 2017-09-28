@@ -102,7 +102,6 @@ var resize_code_drag: ?Resize_Code_Drag = null;
 
 function initialize() {
     initialize_grid();
-    // initialize_sidebar();
 
     $('#new-import').on('click', function(evt) {
         create_and_render_import();
