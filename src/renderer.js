@@ -397,13 +397,13 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
     // name
     var $name = $('<div class="name">')
-    $name.append($('<input>').attr('value', block.name).attr('readOnly', true).on('change', function(evt) {
+    $name.append($('<input>').val(block.name).attr('readOnly', true).on('change', function(evt) {
           var old_name = block.name;
           var new_name = interpreter.change_name(block, evt.target.value);
 
           var $input = $(evt.target);
+          $input.blur(); // this could trigger the 'change' event if it's after the .val() call
           $input.val(new_name); // rewrite in case the name changed because of sanitization
-          $input.blur(); 
           $input.attr('readOnly', true)
 
           $input.parents('.block').attr('id', 'block-'+new_name)
