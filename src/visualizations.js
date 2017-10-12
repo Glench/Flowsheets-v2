@@ -26,11 +26,12 @@ function fade_background_color($element, alpha:number, color:string) {
 class DefaultViz extends React.Component {
     state: Object;
     scroll: Function;
+
     should_flash: boolean;
 
     constructor(props:Object) {
         super(props);
-        this.scroll = this.scroll.bind(this);
+        this.scroll = _.throttle(this.scroll, 17).bind(this);
 
         this.state = {render_start: 0}
         this.should_flash = true;
@@ -58,7 +59,10 @@ class DefaultViz extends React.Component {
             return
         }
 
-        // scroll other blocks' output if they depend on this block
+        // scroll parents
+        // TODO
+
+        // scroll children nodes
         interpreter.blocks.forEach(test_block => {
             if (test_block.depends_on.includes(this.props.block)) {
                 $('#block-'+test_block.name).find('.output > *').scrollTop(this.refs.scrollable.scrollTop)
@@ -123,6 +127,8 @@ class DefaultViz extends React.Component {
                     fontWeight: 'bold',
                 }}, 'Length: '+length)
             );
+        } else if (_.isString(this.props.block.output)) {
+            var outputElement: any = React.createElement('pre', {style: {width:'99%', height: '100%', border: 0, fontFamily: "Helvetica", padding: 3, margin: 0}, readOnly: true}, '"'+this.props.block.output+'"');
         } else {
             var outputElement: any = React.createElement('input', {style: inputStyle, value: JSON.stringify(this.props.block.output), readOnly: true});
         }

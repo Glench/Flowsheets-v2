@@ -26,10 +26,13 @@ class DefaultViz extends React.Component {
 
     constructor(props) {
         super(props);
-        this.scroll = this.scroll.bind(this);
+        this.scroll = _.throttle(this.scroll, 17).bind(this);
+        this.mouse_enter = this.mouse_enter.bind(this);
+        this.mouse_leave = this.mouse_leave.bind(this);
 
         this.state = { render_start: 0 };
         this.should_flash = true;
+        this.is_scroll_target = false;
     }
 
     componentDidMount() {
@@ -49,12 +52,22 @@ class DefaultViz extends React.Component {
         fade_background_color($inputs, 1, 'rgba(255,255,0, ');
     }
 
+    mouse_enter() {
+        this.is_scroll_target = true;
+    }
+    mouse_leave() {
+        this.is_scroll_target = false;
+    }
+
     scroll(evt) {
         if (!_.isObject(this.props.block.output) || !_.isArray(this.props.block.output) || this.props.block.error) {
             return;
         }
 
-        // scroll other blocks' output if they depend on this block
+        // scroll parents
+        // TODO
+
+        // scroll children nodes
         interpreter.blocks.forEach(test_block => {
             if (test_block.depends_on.includes(this.props.block)) {
                 $('#block-' + test_block.name).find('.output > *').scrollTop(this.refs.scrollable.scrollTop);
@@ -116,10 +129,12 @@ class DefaultViz extends React.Component {
                     fontFamily: 'Clear Sans, Helvetica Neue, sans-serif',
                     fontWeight: 'bold'
                 } }, 'Length: ' + length));
+        } else if (_.isString(this.props.block.output)) {
+            var outputElement = React.createElement('pre', { style: { width: '99%', height: '100%', border: 0, fontFamily: "Helvetica", padding: 3 }, readOnly: true }, '"' + this.props.block.output + '"');
         } else {
             var outputElement = React.createElement('input', { style: inputStyle, value: JSON.stringify(this.props.block.output), readOnly: true });
         }
-        return React.createElement('div', { ref: 'scrollable', onScroll: this.scroll }, React.createElement('div', { ref: 'container', style: { height: cell_height * length } }, outputElement));
+        return React.createElement('div', { ref: 'scrollable', onScroll: this.scroll, onMouseEnter: this.mouse_enter, onMouseLeave: this.mouse_leave }, React.createElement('div', { ref: 'container', style: { height: cell_height * length } }, outputElement));
     }
 }
 module.exports.DefaultViz = DefaultViz;
