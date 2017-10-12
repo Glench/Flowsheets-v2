@@ -334,17 +334,21 @@ class HTMLPickerViz extends React.Component {
             clear_selector += ', '+this.old_selector
         }
 
-        this.refs.iframe.contentWindow.$(clear_selector).removeClass('flowsheets_selected').css({
-            backgroundColor: 'inherit',
-            boxShadow: 'none',
-            outline: 'none',
-        })
+        try {
+            this.refs.iframe.contentWindow.$(clear_selector).removeClass('flowsheets_selected').css({
+                backgroundColor: 'inherit',
+                boxShadow: 'none',
+                outline: 'none',
+            })
+        } catch(e) {}
         this.old_selector = selector;
-        this.refs.iframe.contentWindow.$(selector).addClass('flowsheets_selected').css({
-            backgroundColor: 'yellow',
-            boxShadow: '0 0 10px rgba(0,0,0,.4)',
-            outline: '1px solid yellow',
-        });
+        try {
+            this.refs.iframe.contentWindow.$(selector).addClass('flowsheets_selected').css({
+                backgroundColor: 'yellow',
+                boxShadow: '0 0 10px rgba(0,0,0,.4)',
+                outline: '1px solid yellow',
+            });
+        } catch(e) {}
     }
 
     attach_picker_events() {
