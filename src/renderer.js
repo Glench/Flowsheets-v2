@@ -175,7 +175,7 @@ function initialize_grid() {
             var previous_output_height = ui_block.output_height;
             ui_block.output_height = clamp(resize_drag.original_output_height + new_rows, 1, rows);
 
-            if (ui_block.output_height > previous_output_height) {
+            if (ui_block.output_height > previous_output_height && !ui_block.block.error) {
                 render_visualization(ui_block, ui_block.visualization)
             }
             resize(ui_block)
