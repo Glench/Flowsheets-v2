@@ -59,13 +59,21 @@ class DefaultViz extends React.Component {
             return
         }
 
-        // scroll parents
-        // TODO
+        // scroll parent nodes
+        this.props.block.depends_on.forEach(parent_block => {
+            var $parent_block_output = $('#block-'+parent_block.name).find('.output > *')
+            if ($parent_block_output.scrollTop() != this.refs.scrollable.scrollTop) {
+                $parent_block_output.scrollTop(this.refs.scrollable.scrollTop)
+            }
+        })
 
         // scroll children nodes
         interpreter.blocks.forEach(test_block => {
             if (test_block.depends_on.includes(this.props.block)) {
-                $('#block-'+test_block.name).find('.output > *').scrollTop(this.refs.scrollable.scrollTop)
+                var $test_block_output = $('#block-'+test_block.name).find('.output > *')
+                if ($test_block_output.scrollTop() != this.refs.scrollable.scrollTop) {
+                    $test_block_output.scrollTop(this.refs.scrollable.scrollTop)
+                }
             }
         });
 
