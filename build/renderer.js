@@ -33,7 +33,8 @@ module.exports.ui_blocks = ui_blocks;
 class UIBlock {
     // should be React.Component, but  is awful
 
-    // in # of rows, not pixels
+    // in # of rows
+
     // in # of rows, not pixels
     // in # of rows, not pixels
     constructor() {
@@ -47,7 +48,11 @@ class UIBlock {
         this.output_height = 1;
         this.visualization = visualizations.DefaultViz;
         this.visualization_options_height = 0;
+        this.visualization_scrollTop = 0;
     } // should be React.Component, but  is awful
+    // to coordinate scrolling in visualizations
+
+    // in # of rows, not pixels
     // in # of rows, not pixels
     // in # of rows, not pixels
 };
@@ -487,6 +492,11 @@ function create_and_render_block(block, row, column) {
         });
         codemirror.on('blur', function (instance, evt) {
             instance.setSelection({ line: 0, ch: 0 });
+
+            // don't let UI display of code get out of sync with output
+            if (block.code !== instance.getValue()) {
+                update_func(block, instance.getValue());
+            }
         });
         codemirror.on('cursorActivity', function (instance) {
             var selection = instance.getSelection();
