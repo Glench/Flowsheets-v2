@@ -48,8 +48,6 @@ class UIBlock {
     output_height: number; // in # of rows, not pixels
     visualization_options_height: number; // in # of rows
 
-    visualization_scrollTop: number; // to coordinate scrolling in visualizations
-
     block: Block;
 
     visualization: any; // should be React.Component, but @flow is awful
@@ -66,7 +64,6 @@ class UIBlock {
         this.output_height = 1;
         this.visualization = visualizations.DefaultViz;
         this.visualization_options_height = 0;
-        this.visualization_scrollTop = 0;
     }
 };
 module.exports.UIBlock = UIBlock;
@@ -529,7 +526,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
         });
         codemirror.on('blur', function(instance:CodeMirror, evt) {
             instance.setSelection({line:0, ch:0})
-            
+
             // don't let UI display of code get out of sync with output
             if (block.code !== instance.getValue()) {
                 update_func(block, instance.getValue())
