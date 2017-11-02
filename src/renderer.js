@@ -528,7 +528,8 @@ function create_and_render_block(block: Block, row: number, column: number) {
             instance.setSelection({line:0, ch:0})
 
             // don't let UI display of code get out of sync with output
-            if (block.code !== instance.getValue()) {
+            var current_code = ui_block_cell_name == 'filter_clause_height' ? block.filter_clause : block.code;
+            if (code !== instance.getValue()) {
                 update_func(block, instance.getValue())
             }
         });
