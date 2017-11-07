@@ -454,7 +454,7 @@ function create_and_render_block(block, row, column) {
                 _ui_block[ui_block_cell_name] = clamp(_.filter(code, x => x == '\n').length + 1, 1, 30); // limit pasting in long strings
 
                 // make block width equal to the number of characters that will fit in a cell,
-                var number_of_characters_that_will_fit_in_a_cell = 10.5;
+                var number_of_characters_that_will_fit_in_a_cell = 11.99999;
                 // make block's size fit the longest line in a code editor
                 ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, 8);
                 resize(ui_block);
