@@ -103,7 +103,7 @@ var resize_code_drag: ?Resize_Code_Drag = null;
 function initialize() {
     initialize_grid();
 
-    $('#new-import').on('click', function(evt) {
+    $('#new-import').on('click', function() {
         create_and_render_import();
     })
 }
@@ -144,7 +144,7 @@ function initialize_grid() {
     ctx.translate(-0.5, -0.5);
 
 
-    $main.on('click', function(evt) {
+    $main.on('click', function(evt: MouseEvent) {
         var column = Math.floor((evt.offsetX-2) / cell_width);
         var row = Math.floor((evt.offsetY-2) / cell_height);
 
@@ -154,7 +154,7 @@ function initialize_grid() {
 
     $('body').on('mouseup', reset_dragging);
 
-    $('body').on('mousemove', function(evt) {
+    $('body').on('mousemove', function(evt: MouseEvent) {
         if (resize_drag) {
             var ui_block = resize_drag.ui_block;
             ui_block.should_auto_resize = false;
@@ -266,7 +266,7 @@ function create_and_render_import() {
     $input.focus();
 }
 
-function reset_dragging(evt) {
+function reset_dragging(evt: MouseEvent) {
     if (!resize_drag && !move_drag && !resize_code_drag) {
         return
     }
@@ -294,7 +294,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
     })
 
     // menu button
-    var $menu_button = $('<div class="menu-button">').text('🔽').on('click', function(evt) {
+    var $menu_button = $('<div class="menu-button">').text('🔽').on('click', function() {
         var $current_menu = $block.find('.menu, .submenu')
         if ($current_menu.length) {
             $current_menu.remove();
@@ -303,13 +303,13 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
         var $menu = $('<ul class="menu">');
 
-        var $delete = $('<li>').text('Delete (todo)').on('click', function(evt) {
+        var $delete = $('<li>').text('Delete (todo)').on('click', function() {
             delete_(ui_block);
             interpreter.delete_(block);
         });
         $menu.append($delete);
 
-        var $make_string = $('<li>').html(block.is_string_concat ? 'Make string&nbsp;✔' : 'Make string').on('click', function(evt) {
+        var $make_string = $('<li>').html(block.is_string_concat ? 'Make string&nbsp;✔' : 'Make string').on('click', function(evt: MouseEvent) {
             var $make_string = $(evt.target);
             if (!block.is_string_concat) {
                 block.is_string_concat = true;
@@ -325,7 +325,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
         $menu.append($make_string)
 
         var text = block.filter_clause ? 'Remove Filter' : 'Add Filter';
-        var $filter = $('<li>').text(text).on('click', function(evt) {
+        var $filter = $('<li>').text(text).on('click', function() {
             $block.find('.menu, .submenu').remove();
             if (block.filter_clause) {
                 interpreter.remove_filter_clause(block);
@@ -368,7 +368,7 @@ function create_and_render_block(block: Block, row: number, column: number) {
         });
         $menu.append($sort);
 
-        var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function(evt) {
+        var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function() {
             $block.find('.submenu').remove(); // remove old ones if they're still around
 
             var $submenu = $('<ul class="submenu">').css({
@@ -379,14 +379,14 @@ function create_and_render_block(block: Block, row: number, column: number) {
 
             _.each(visualizations, function(react_component, name) {
                 var text = name;
-                var $li = $('<li>').html(name == ui_block.visualization.name ? '✔&nbsp;'+name : name).on('click', function(evt) {
+                var $li = $('<li>').html(name == ui_block.visualization.name ? '✔&nbsp;'+name : name).on('click', function() {
                     $block.find('.menu, .submenu').remove();
                     ui_block.visualization = react_component;
                     render_output(block);
                 });
                 $submenu.append($li)
             })
-        }).on('mouseleave', function(evt) {
+        }).on('mouseleave', function() {
             // $block.find('.submenu').remove();
         });
         $menu.append($viz);

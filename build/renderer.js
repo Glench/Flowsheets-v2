@@ -75,7 +75,7 @@ var resize_code_drag = null;
 function initialize() {
     initialize_grid();
 
-    $('#new-import').on('click', function (evt) {
+    $('#new-import').on('click', function () {
         create_and_render_import();
     });
 }
@@ -264,7 +264,7 @@ function create_and_render_block(block, row, column) {
     });
 
     // menu button
-    var $menu_button = $('<div class="menu-button">').text('🔽').on('click', function (evt) {
+    var $menu_button = $('<div class="menu-button">').text('🔽').on('click', function () {
         var $current_menu = $block.find('.menu, .submenu');
         if ($current_menu.length) {
             $current_menu.remove();
@@ -273,7 +273,7 @@ function create_and_render_block(block, row, column) {
 
         var $menu = $('<ul class="menu">');
 
-        var $delete = $('<li>').text('Delete (todo)').on('click', function (evt) {
+        var $delete = $('<li>').text('Delete (todo)').on('click', function () {
             delete_(ui_block);
             interpreter.delete_(block);
         });
@@ -294,7 +294,7 @@ function create_and_render_block(block, row, column) {
         $menu.append($make_string);
 
         var text = block.filter_clause ? 'Remove Filter' : 'Add Filter';
-        var $filter = $('<li>').text(text).on('click', function (evt) {
+        var $filter = $('<li>').text(text).on('click', function () {
             $block.find('.menu, .submenu').remove();
             if (block.filter_clause) {
                 interpreter.remove_filter_clause(block);
@@ -337,7 +337,7 @@ function create_and_render_block(block, row, column) {
         });
         $menu.append($sort);
 
-        var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function (evt) {
+        var $viz = $('<li>').html('Visualization&nbsp;&nbsp;▶').on('mouseenter', function () {
             $block.find('.submenu').remove(); // remove old ones if they're still around
 
             var $submenu = $('<ul class="submenu">').css({
@@ -348,14 +348,14 @@ function create_and_render_block(block, row, column) {
 
             _.each(visualizations, function (react_component, name) {
                 var text = name;
-                var $li = $('<li>').html(name == ui_block.visualization.name ? '✔&nbsp;' + name : name).on('click', function (evt) {
+                var $li = $('<li>').html(name == ui_block.visualization.name ? '✔&nbsp;' + name : name).on('click', function () {
                     $block.find('.menu, .submenu').remove();
                     ui_block.visualization = react_component;
                     render_output(block);
                 });
                 $submenu.append($li);
             });
-        }).on('mouseleave', function (evt) {
+        }).on('mouseleave', function () {
             // $block.find('.submenu').remove();
         });
         $menu.append($viz);
@@ -454,7 +454,7 @@ function create_and_render_block(block, row, column) {
                 _ui_block[ui_block_cell_name] = clamp(_.filter(code, x => x == '\n').length + 1, 1, 30); // limit pasting in long strings
 
                 // make block width equal to the number of characters that will fit in a cell,
-                var number_of_characters_that_will_fit_in_a_cell = 11.99999;
+                var number_of_characters_that_will_fit_in_a_cell = 11.999;
                 // make block's size fit the longest line in a code editor
                 ui_block.width_in_columns = clamp(Math.ceil(_.last(_.sortBy(code.split('\n'), line => line.length)).length / number_of_characters_that_will_fit_in_a_cell), 1, 8);
                 resize(ui_block);
