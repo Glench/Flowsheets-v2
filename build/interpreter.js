@@ -18,6 +18,9 @@ if (__dirname.endsWith('build')) {
     python_interpreter.on('close', function (data) {
         if (module.exports.WARN_ON_CLOSE) alert("Python processes closed! Probably due to interpreter.py error. Error code: " + data);
     });
+    process.on('exit', function () {
+        python_interpreter.kill();
+    });
     module.exports.python_interpreter = python_interpreter;
 } else {
     throw "Can't find interpreter.py, __dirname is: " + __dirname;

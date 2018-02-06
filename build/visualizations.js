@@ -46,6 +46,9 @@ class DefaultViz extends React.Component {
 
     flash_yellow() {
         var $inputs = $(this.refs.container).find('input');
+        if ($inputs.length == 0) {
+            $inputs = $(this.refs.container).find('pre');
+        }
         fade_background_color($inputs, 1, 'rgba(255,255,0, ');
     }
 
@@ -128,7 +131,7 @@ class DefaultViz extends React.Component {
                     fontWeight: 'bold'
                 } }, 'Length: ' + length));
         } else if (_.isString(this.props.block.output)) {
-            var outputElement = React.createElement('pre', { style: { width: '99%', height: '100%', border: 0, fontFamily: "Helvetica", padding: 3, margin: 0 }, readOnly: true }, '"' + this.props.block.output + '"');
+            var outputElement = React.createElement('pre', { style: { width: '99%', height: '100%', border: 0, fontFamily: "Helvetica", padding: 3, margin: 0, backgroundColor: 'transparent' }, readOnly: true }, '"' + this.props.block.output + '"');
         } else {
             var outputElement = React.createElement('input', { style: inputStyle, value: JSON.stringify(this.props.block.output), readOnly: true });
         }

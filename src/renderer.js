@@ -1,5 +1,10 @@
 // @flow
-
+if (typeof window === 'undefined') {
+    const Window = require('window');
+    window = new Window();
+    navigator = window.navigator;
+    document = window.document;
+}
 const $ = require('jquery');
 const _ = require('underscore');
 const React = require('react');
@@ -102,6 +107,7 @@ var resize_code_drag: ?Resize_Code_Drag = null;
 
 function initialize() {
     initialize_grid();
+    initialize_sidebar();
 
     $('#new-import').on('click', function() {
         create_and_render_import();
@@ -110,14 +116,16 @@ function initialize() {
 module.exports.initialize = initialize;
 
 function initialize_grid() {
-    var $main = $('canvas#main')
+    var canvas:HTMLElement = document.querySelector('canvas#main') || document.createElement('canvas');
     var height = rows*cell_height;
     var width = columns*cell_width;
-    var canvas = $main.get(0)
 
+    // $FlowFixMe
     canvas.width = width;
+    // $FlowFixMe
     canvas.height = height;
 
+    // $FlowFixMe
     var ctx = canvas.getContext('2d');
 
     ctx.translate(0.5, 0.5);
@@ -144,7 +152,7 @@ function initialize_grid() {
     ctx.translate(-0.5, -0.5);
 
 
-    $main.on('click', function(evt: MouseEvent) {
+    $(canvas).on('click', function(evt: MouseEvent) {
         var column = Math.floor((evt.offsetX-2) / cell_width);
         var row = Math.floor((evt.offsetY-2) / cell_height);
 
@@ -201,6 +209,17 @@ function initialize_grid() {
 }
 
 function initialize_sidebar() {
+    var $expand_collapse_button = $('#sidebar #collapse');
+    $expand_collapse_button.on('click', function(evt) {
+        if ($('#sidebar').width() > 15) {
+            $('#sidebar').width(10)
+            $(evt.target).text('+')
+        } else {
+            $('#sidebar').width(500)
+            $(evt.target).text('-')
+        }
+    })
+
     var $visualization_editor = $('<div class="visualization_editor">');
 
     var code = `class CustomViz extends React.Component {
